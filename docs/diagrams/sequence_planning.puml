@@ -1,0 +1,62 @@
+@startuml sequence_planning
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontSize 12
+skinparam sequenceArrowThickness 1.5
+skinparam ParticipantBorderColor #555
+skinparam SequenceLifeLineBorderColor #AAAAAA
+skinparam NoteBackgroundColor #FFFDE7
+skinparam NoteBorderColor #F9A825
+
+title planning_node [A3] — Internal Detail
+
+participant "planning_node\n[A3]"  as A3 #FFF9C4
+participant "LLM\ngpt-4o-mini"     as LLM #FCE4EC
+participant "SQLite\ntravel.db"    as DB  #F3E5F5
+participant "VRP\nOptimizer"       as VRP #E8F5E9
+participant "TrackAsia\nDirections API" as TA #E0F7FA
+
+activate A3
+
+A3 -> DB : _load_db_attractions("da_nang")
+DB --> A3 : 30 destinations\n(100% geocoded)
+
+A3 -> DB : _load_db_restaurants("da_nang")
+DB --> A3 : 84 restaurants\n(100% geocoded)
+
+A3 -> A3 : _enrich_coords(RAG places)\nfill lat/lon from DB index\nfor places missing coordinates
+
+A3 -> A3 : _rank_attractions()\nscore = retrieval_score\n  + intent_match_ratio\n  + density_bucket_bonus
+
+A3 -> VRP : optimize_itinerary(\n  hotel, attractions[:days×4],\n  restaurants[:days×6],\n  total_days\n)
+
+alt VRP returns valid routes
+  VRP --> A3 : vrp_days { day → {\n  morning_idx, afternoon_idx,\n  breakfast_idx, lunch_idx, dinner_idx\n}}
+else VRP unavailable / empty
+  A3 -> LLM : _llm_plan_itinerary(\n  destinations[:50],\n  restaurants[:50],\n  hotels[:10], query\n)\ntemperature=0.3
+  LLM --> A3 : { hotel_index, days[{\n  morning_idx, afternoon_idx,\n  *_action, day_theme\n}]}
+end
+
+A3 -> DB : _select_stay_plan(\n  daily_frames, hotels,\n  budget_tier\n)
+note right of A3
+  Hotel score = 32.0
+    + area_bonus    (+10 same district)
+    + star_bonus    (+1.5 per star)
+    + type_bonus    (resort+2.5 | hostel+1.0)
+    + budget_bonus  (low: +5 | high: +6)
+    - 2.2×avg_km
+    - 0.8×max_km
+end note
+DB --> A3 : selected hotel + stay_plan
+
+loop for each day (1..N)
+  A3 -> TA : GET /route/v2/directions\n  ?origin=hotel&waypoints=[\n    breakfast,morning,lunch,\n    afternoon,dinner\n  ]&mode=car
+  TA --> A3 : route_leg {\n  distance_km, eta_min,\n  mode_label, routing_source\n}
+end
+
+A3 -> A3 : build plan text\nLICH TRINH {N} NGAY TAI {CITY}\n  NGAY {d} - {day_theme}\n  • Buoi sang: An sang tai ...\n  • Buoi trua: An trua tai ...\n  • Buoi chieu: Hoat dong: ...\n  • Buoi toi: An toi tai ...
+
+A3 --> A4 : state {\n  plan, route_plan[],\n  recommended_hotel,\n  all_places_for_validation\n}
+deactivate A3
+
+@enduml

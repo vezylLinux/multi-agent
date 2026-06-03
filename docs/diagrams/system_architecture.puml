@@ -1,0 +1,101 @@
+@startuml system_architecture
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam componentStyle rectangle
+skinparam defaultFontSize 12
+skinparam ArrowColor #555555
+skinparam ComponentBorderColor #777777
+skinparam PackageBorderColor #AAAAAA
+skinparam PackageBackgroundColor #FAFAFA
+
+title Multi-Agent Tourism Planning System — Architecture
+
+actor "User" as user
+
+package "Frontend  (Next.js :3001)" #EBF5FB {
+  component "ChatShell\n+ ItineraryFlowPanel" as ui
+  component "DayMap\n(TrackAsia tiles)" as map
+}
+
+package "Backend  (FastAPI :8000)" #EAF7EA {
+
+  component "API Routes\n/chat  /conversations\n/session  /plans  /route" as routes
+
+  package "LangGraph Workflow" #FFF8E1 {
+    component "intake_node [A1]"     as A1 #BBDEFB
+    component "retrieval_node [A2]"  as A2 #C8E6C9
+    component "planning_node [A3]"   as A3 #FFF9C4
+    component "validator_node [A4]"  as A4 #FFCCBC
+    component "response_node [A5]"   as A5 #E1BEE7
+  }
+
+  package "Services" #F3E5F5 {
+    component "Builder\n(VRP + hotel scorer)" as builder
+    component "RAG Engine\n(retrieve + re-rank)"  as rag
+    component "Formatter\n(answer assembly)"      as formatter
+    component "Validator\n(distance + LLM check)" as val_svc
+    component "Scoring\n(INTEREST_KEYWORDS)"      as scoring
+  }
+}
+
+database "SQLite\ntravel.db" #FFF3E0 {
+  storage "places  (883)"      as tbl_places
+  storage "place_chunks"       as tbl_chunks
+  storage "conversations\nmessages / plans" as tbl_conv
+}
+
+database "Chroma\n(2162 vectors)" as chroma #E3F2FD
+
+cloud "External APIs" {
+  component "OpenRouter\n(gpt-4o-mini)"         as llm      #FCE4EC
+  component "OpenAI Embeddings\n(dim=1536)"      as embed    #FFF3E0
+  component "TrackAsia\n(geocode + routing)"     as trackasia #E0F7FA
+  component "OpenWeather\n(optional)"            as weather  #E8F5E9
+}
+
+package "Offline Scripts" #F5F5F5 {
+  component "preprocess.py"      as pre
+  component "geocode_places.py\n(adaptive rate)" as geo
+  component "ingest_to_chroma.py" as ingest
+}
+
+' ── user flow ──
+user      --> ui
+ui        --> routes      : REST / SSE
+map       --> trackasia   : tiles + place search
+
+' ── api → agents ──
+routes    --> A1
+A1        --> A2          : intake_complete
+A1        --> routes      : incomplete (follow-up)
+A2        --> A3
+A3        --> A4
+A4        --> A3          : needs_replan (retry ×1)
+A4        --> A5
+A5        --> routes      : response_payload
+
+' ── agents → services ──
+A1        --> llm         : extract intent  temp=0.0
+A2        --> rag
+A3        --> builder
+A4        --> val_svc
+A5        --> formatter
+
+' ── services → data ──
+rag       --> embed       : embed query
+rag       --> chroma      : cosine search
+rag       --> tbl_places  : list_places()
+builder   --> tbl_places  : load DB pool
+builder   --> trackasia   : directions / distance
+builder   --> llm         : llm_plan_itinerary  temp=0.3
+val_svc   --> llm         : validate plan  temp=0.0
+builder   --> scoring
+
+' ── offline ──
+pre       --> tbl_places  : upsert_places()
+geo       --> trackasia   : geocode 883 places
+ingest    --> embed       : batch embed
+ingest    --> chroma      : upsert_chunks()
+tbl_chunks --> chroma
+
+@enduml

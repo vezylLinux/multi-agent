@@ -1,0 +1,58 @@
+@startuml sequence_overview
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontSize 13
+skinparam sequenceArrowThickness 1.5
+skinparam ParticipantBorderColor #555
+skinparam SequenceLifeLineBorderColor #AAAAAA
+
+title Agent Pipeline — Overview\nPOST /api/chat  (happy path)
+
+actor   "User"          as User
+box "FastAPI :8000" #F5F5F5
+  participant "API"     as API
+end box
+box "LangGraph Workflow" #EBF5FB
+  participant "intake_node\n[A1]"     as A1 #BBDEFB
+  participant "retrieval_node\n[A2]"  as A2 #C8E6C9
+  participant "planning_node\n[A3]"   as A3 #FFF9C4
+  participant "validator_node\n[A4]"  as A4 #FFCCBC
+  participant "response_node\n[A5]"   as A5 #E1BEE7
+end box
+
+User  ->  API : POST /api/chat\n{ message, top_k, with_plan }
+API   ->  A1  : invoke(state)
+
+A1    ->  A1  : LLM extract intent\n(temp=0.0)
+
+alt intake incomplete
+  A1  --> API : follow_up_questions
+  API --> User : "Missing: destination/days/interests"
+else intake complete
+  A1  ->  A2  : collected_info { destination,\n  days, interests, budget, companion }
+
+  A2  ->  A2  : embed → Chroma search\n+ weather fetch
+  A2  ->  A3  : places[20], weather
+
+  A3  ->  A3  : load DB pool → VRP/LLM plan\n+ budget-aware hotel scoring\n+ TrackAsia routing
+  A3  ->  A4  : plan, route_plan, hotel
+
+  A4  ->  A4  : LLM validate + distance check
+  alt validation failed
+    A4  ->  A3  : needs_replan=True
+    A3  ->  A4  : revised plan (retry ×1)
+  end
+
+  A4  ->  A5  : plan_validation { passed: true }
+  A5  ->  A5  : format_planning_answer()
+  A5  --> API : response_payload
+  API --> User : ChatResponse\n{ answer, plan, route_plan,\n  hotel, validation, timings }
+end
+
+note over User, A5
+  Typical latency breakdown:
+  A1 ~1s  |  A2 ~2s  |  A3 ~10s  |  A4 ~4s  |  A5 <0.5s
+  Total: ~17s  (retry adds +10s, occurs ~80% of queries)
+end note
+
+@enduml

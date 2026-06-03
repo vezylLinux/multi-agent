@@ -1,0 +1,76 @@
+@startuml sequence_validation
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontSize 12
+skinparam sequenceArrowThickness 1.5
+skinparam ParticipantBorderColor #555
+skinparam SequenceLifeLineBorderColor #AAAAAA
+skinparam NoteBackgroundColor #FFFDE7
+skinparam NoteBorderColor #F9A825
+
+title validator_node [A4] — Validation + Retry Loop
+
+participant "planning_node\n[A3]"    as A3 #FFF9C4
+participant "validator_node\n[A4]"   as A4 #FFCCBC
+participant "response_node\n[A5]"    as A5 #E1BEE7
+participant "LLM\ngpt-4o-mini"       as LLM #FCE4EC
+
+A3 --> A4 : plan (text)\nroute_plan[]\nall_places_for_validation
+
+activate A4
+
+A4 -> LLM : validate_itinerary_plan(\n  plan, interests, days\n)\ntemperature=0.0
+
+LLM --> A4 : {\n  passed: bool,\n  issues: string[],\n  reason: string\n}
+
+note right of LLM
+  Hard issues (block + retry):
+  • daily_count_mismatch
+  • missing_daily_structure
+  • unrealistic_schedule  (>5 activities/day)
+  • empty_place_pool
+
+  Soft issues (warn only):
+  • too_many_self_service_meals
+end note
+
+A4 -> A4 : _check_distances(route_plan)\nfor each leg:\n  if distance_km > 18km → long_leg_count++\n  if distance_km > 25km → extreme = true
+
+alt distance violations
+  A4 -> A4 : issues.append(\n  "too_many_long_legs" |\n  "extreme_leg_distance"\n)
+end
+
+alt issues is empty  OR  all issues are soft
+  A4 -> A4 : passed = True
+  A4 --> A5 : plan_validation {\n  passed: True,\n  issues: [],\n  retried: False,\n  metrics: {\n    max_leg_km,\n    long_leg_count_gt_18km\n  }\n}
+  deactivate A4
+else hard issue found  AND  retry_attempted = False
+  A4 -> A4 : build_retry_query()\n  append constraints:\n  "cluster nearby places\n   avoid legs over 15km"\naugment places pool
+
+  A4 --> A3 : needs_replan=True\nretry_query, augmented_places\n(strict_mode=True)
+  activate A3
+  note over A3
+    Retry: strict_mode=True
+    • No DB supplement for attractions
+    • Same restaurant pool (always from DB)
+    • LLM re-plans with tighter constraints
+  end note
+  A3 --> A4 : revised plan\nrevised route_plan
+  deactivate A3
+
+  A4 -> LLM : re-validate (same prompt)
+  LLM --> A4 : { passed: True, issues: [] }
+
+  A4 --> A5 : plan_validation {\n  passed: True,\n  retried: True\n}
+  deactivate A4
+else hard issue  AND  retry already attempted
+  A4 --> A5 : plan_validation {\n  passed: False,\n  issues: [...],\n  retried: True\n}
+  note right of A5
+    System still returns the plan
+    but marks it as unverified.
+    Frontend shows warning badge.
+  end note
+  deactivate A4
+end
+
+@enduml

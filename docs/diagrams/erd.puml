@@ -1,0 +1,168 @@
+@startuml erd
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontSize 12
+skinparam EntityBorderColor #555555
+skinparam EntityBackgroundColor #FAFAFA
+skinparam NoteBackgroundColor #FFFDE7
+skinparam NoteBorderColor #F9A825
+skinparam linetype ortho
+
+title SQLite Database Schema — ERD\ntravel.db  (7 tables)
+
+' ─── SESSION / AUTH ──────────────────────────────────────────
+entity "principals" as P #BBDEFB {
+  * id          : TEXT  <<PK, UUID>>
+  --
+  type          : TEXT  CHECK (anonymous|user)
+  created_at    : TEXT  (ISO-8601)
+  updated_at    : TEXT  (ISO-8601)
+}
+
+entity "anonymous_sessions" as S #C8E6C9 {
+  * id           : TEXT  <<PK, UUID>>
+  --
+  * principal_id : TEXT  <<FK → principals.id>>
+  session_key    : TEXT  <<UNIQUE>>
+  first_seen_at  : TEXT
+  last_seen_at   : TEXT
+  user_agent     : TEXT
+  ip_hash        : TEXT  (SHA-256)
+}
+
+' ─── CONVERSATION ────────────────────────────────────────────
+entity "conversations" as C #FFF9C4 {
+  * id           : TEXT  <<PK, UUID>>
+  --
+  * principal_id : TEXT  <<FK → principals.id>>
+  title          : TEXT
+  created_at     : TEXT
+  updated_at     : TEXT
+}
+
+entity "messages" as M #FFCCBC {
+  * id              : TEXT  <<PK, UUID>>
+  --
+  * conversation_id : TEXT  <<FK → conversations.id>>
+  role              : TEXT  (user | assistant)
+  content           : TEXT
+  metadata_json     : TEXT  <<JSON>>
+  ..
+  metadata contains:
+  plan / route_plan /
+  recommended_hotel /
+  plan_validation /
+  collected_info /
+  verified_places /
+  timings
+  ..
+  created_at        : TEXT
+}
+
+entity "plans" as PL #E1BEE7 {
+  * id              : TEXT  <<PK, UUID>>
+  --
+  * conversation_id : TEXT  <<FK → conversations.id>>
+  * principal_id    : TEXT  <<FK → principals.id>>
+  city              : TEXT
+  days              : INTEGER
+  structured_json   : TEXT  <<JSON>>
+  created_at        : TEXT
+  updated_at        : TEXT
+}
+
+' ─── PLACES ──────────────────────────────────────────────────
+entity "places" as PL2 #E8F5E9 {
+  * place_id            : TEXT  <<PK>>
+  --
+  name                  : TEXT  <<INDEXED>>
+  category              : TEXT  (destination | restaurant\n  | accommodation | entertainment\n  | transport)
+  city                  : TEXT
+  city_key              : TEXT  <<INDEXED>>  (da_nang)
+  district              : TEXT
+  ward                  : TEXT
+  address               : TEXT
+  lat                   : REAL  <<INDEXED>>
+  lon                   : REAL
+  intent_tags_json      : TEXT  <<JSON>>
+  ..
+  intent tags (English):
+  food | beach | museum | heritage
+  spiritual | shopping | cafe
+  nature | nightlife | family
+  ..
+  admin_area_keys_json  : TEXT  <<JSON>>
+  source                : TEXT
+  source_category_code  : TEXT
+  item_id               : TEXT
+  detail_url            : TEXT
+  phone                 : TEXT
+  planner_role          : TEXT
+  density_bucket        : TEXT
+  verification_status   : TEXT
+  google_place_id       : TEXT
+  google_maps_uri       : TEXT
+  payload_json          : TEXT  <<JSON>> (full enriched record)
+  created_at            : TEXT
+  updated_at            : TEXT
+}
+
+entity "place_chunks" as PC #FFF3E0 {
+  * doc_id          : TEXT  <<PK>>
+  --
+  * place_id        : TEXT  <<FK → places.place_id\n   ON DELETE CASCADE>>
+  chunk_index       : INTEGER
+  title             : TEXT
+  city              : TEXT
+  category          : TEXT
+  document_text     : TEXT  (chunk ~120 words)
+  embedding_json    : TEXT  <<JSON>> (float[1536])
+  embedding_model   : TEXT  (text-embedding-3-small)
+  metadata_json     : TEXT  <<JSON>>
+  created_at        : TEXT
+  updated_at        : TEXT
+}
+
+' ─── RELATIONS ───────────────────────────────────────────────
+P  ||--o{ S   : "1 principal\nhas 0..N sessions"
+P  ||--o{ C   : "1 principal\nowns 0..N conversations"
+P  ||--o{ PL  : "1 principal\ncreates 0..N plans"
+C  ||--o{ M   : "1 conversation\ncontains N messages"
+C  ||--o| PL  : "1 conversation\nhas 0..1 plan"
+PL2 ||--o{ PC : "1 place\nchunked into N vectors\n(CASCADE DELETE)"
+
+' ─── NOTES ───────────────────────────────────────────────────
+note right of PL2
+  Stats (Da Nang only):
+  • Total places  : 883
+  • Geocoded       : 882 (99.9%)
+  • destination    : 30  (100% geocoded)
+  • restaurant     : 84  (100% geocoded)
+  • accommodation  : 759 (99.9% geocoded)
+  • entertainment  : 6   (100% geocoded)
+  • transport      : 4   (100% geocoded)
+
+  Offline pipeline:
+  preprocess.py → geocode_places.py
+  → ingest_to_chroma.py
+end note
+
+note right of PC
+  Chroma mirror:
+  Collection: travel_place_chunks
+  Vectors : 2162
+  Model   : text-embedding-3-small
+  dim     : 1536
+  mode    : persistent (local)
+
+  Rebuilt with:
+  ingest_to_chroma.py --recreate
+end note
+
+note right of M
+  metadata_json stores full
+  LangGraph response_payload
+  (denormalised for history replay)
+end note
+
+@enduml

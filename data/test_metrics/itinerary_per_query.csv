@@ -1,0 +1,6 @@
+query,passed,needs_retry,issues,max_leg_km,long_leg_count_gt_18km,days_expected,reason,latency_ms
+"lịch trình 3 ngày 2 đêm Đà Nẵng, thích biển và ẩm thực, ngân sách trung bình",True,False,,15.1,0,3,"The travel plan is well-structured with three days, each containing morning, afternoon, and evening activities, and does not exceed the activity limits.",11883.7
+"lịch trình 2 ngày Đà Nẵng, quan tâm văn hóa lịch sử và mua sắm",True,False,,17.8,0,2,"The travel plan is well-structured with two days of activities, including meals and cultural experiences, meeting the specified interests.",12669.2
+"lịch trình 4 ngày Đà Nẵng, gia đình có trẻ em, thích thiên nhiên và biển",True,False,,15.1,0,4,"The travel plan is well-structured with 4 days, each containing morning, afternoon, and evening activities, and does not exceed the activity limits.",16095.3
+"lịch trình 1 ngày Đà Nẵng, backpacker, thích ẩm thực và cà phê",True,False,,5.3,0,1,"The travel plan is well-structured with a balanced itinerary for one day, including meals and activities.",9525.4
+"lịch trình 3 ngày Đà Nẵng, cặp đôi, thích văn hóa và ẩm thực",True,False,,9.1,0,3,"The travel plan is well-structured with 3 days, each containing morning, afternoon, and evening activities, and does not exceed the activity limit.",14713.3

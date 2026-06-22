@@ -1,0 +1,69 @@
+@startuml sequence_retrieval
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontSize 12
+skinparam sequenceArrowThickness 1.5
+skinparam ParticipantBorderColor #555
+skinparam SequenceLifeLineBorderColor #AAAAAA
+skinparam NoteBackgroundColor #FFFDE7
+skinparam NoteBorderColor #F9A825
+
+participant "Intake Agent\n[A1]" as A1 #BBDEFB
+participant "Retrieval Agent\n[A2]" as A2 #C8E6C9
+participant "RAG / Search Service" as RAG #E8F5E9
+participant "SQLite" as DB #F3E5F5
+participant "ChromaDB" as Chroma #E3F2FD
+participant "OpenAI API\nEmbedding" as OpenAI #FCE4EC
+participant "TrackAsia API" as TrackAsia #E0F7FA
+participant "Planning Agent\n[A3]" as A3 #FFF9C4
+
+A1 --> A2 : collected_info\n{ destination, days, interests,\n  budget, companion, subtasks }
+
+activate A2
+
+A2 -> A2 : build retrieval query\nfrom destination + days + interests
+
+A2 -> RAG : retrieve_trip_artifacts\n{ query, top_k, with_plan }
+
+activate RAG
+
+RAG -> DB : search local catalog\nby category and keywords
+DB --> RAG : lexical candidates
+
+RAG -> OpenAI : embed query
+OpenAI --> RAG : query embedding
+
+RAG -> Chroma : vector search\nby semantic similarity
+Chroma --> RAG : vector candidates
+
+RAG -> RAG : merge lexical + vector results\nenrich metadata + score relevance
+
+alt with_plan = true
+RAG -> DB : collect planning pools\ndestinations, entertainment,\nrestaurants, accommodations
+DB --> RAG : candidate pools for itinerary
+end
+
+RAG --> A2 : base places + trace
+deactivate RAG
+
+opt subtasks exist
+loop each subtask
+A2 -> RAG : targeted retrieval\nby subtask category
+RAG --> A2 : extra places
+end
+
+A2 -> A2 : merge base + extra places\ndeduplicate by place_id
+end
+
+opt not enough hotels
+A2 -> TrackAsia : search hotel fallback
+TrackAsia --> A2 : hotel candidates
+A2 -> A2 : append fallback hotels
+end
+
+A2 --> A3 : retrieved_context\n{ places, trace,\n  local_candidates_considered }
+
+deactivate A2
+
+
+@enduml

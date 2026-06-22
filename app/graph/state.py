@@ -24,7 +24,6 @@ class TravelGraphState(TypedDict):
     places: NotRequired[list[dict[str, Any]]]
     all_places_for_validation: NotRequired[list[dict[str, Any]]]
     local_candidates_considered: NotRequired[int]
-    weather: NotRequired[dict[str, Any] | None]
     guide: NotRequired[str]
     transport: NotRequired[list[str] | None]
     recommended_hotel: NotRequired[dict[str, Any] | None]

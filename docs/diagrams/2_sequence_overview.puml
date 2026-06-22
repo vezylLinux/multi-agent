@@ -1,0 +1,59 @@
+@startuml sequence_overview_simplified
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontSize 13
+skinparam sequenceArrowThickness 1.5
+skinparam ParticipantBorderColor #555
+skinparam SequenceLifeLineBorderColor #AAAAAA
+
+actor "User" as User
+
+box "FastAPI Backend" #F5F5F5
+participant "API Routes" as API
+end box
+
+box "LangGraph Workflow" #EBF5FB
+participant "Intake Agent\n[A1]" as A1 #BBDEFB
+participant "Retrieval Agent\n[A2]" as A2 #C8E6C9
+participant "Planning Agent\n[A3]" as A3 #FFF9C4
+participant "Validator Agent\n[A4]" as A4 #FFCCBC
+participant "Response Agent\n[A5]" as A5 #E1BEE7
+end box
+
+User -> API : POST /api/chat\n{ message, options }
+API -> A1 : invoke workflow
+
+A1 -> A1 : understand request\nextract travel information
+
+alt missing required information
+A1 --> API : follow-up question
+API --> User : ask for missing details
+else request is complete
+A1 -> A2 : collected_info
+
+A2 -> A2 : retrieve relevant places\nand supporting context
+A2 -> A3 : retrieved_context
+
+A3 -> A3 : generate itinerary plan
+A3 -> A4 : draft_plan
+
+A4 -> A4 : validate plan
+
+opt plan needs revision
+A4 --> A3 : request re-plan
+A3 -> A4 : revised_plan x1
+end
+
+A4 -> A5 : validated_plan
+A5 -> A5 : format final answer
+A5 --> API : response_payload
+
+API --> User : answer + itinerary result
+end
+
+note over A1, A5
+Main workflow:
+Intake -> Retrieval -> Planning -> Validation -> Response
+end note
+
+@enduml

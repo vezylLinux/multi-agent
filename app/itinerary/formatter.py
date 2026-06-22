@@ -33,7 +33,6 @@ def format_planning_answer(
     research: str | None,
     plan: str | None,
     coordinator_plan: str | None,
-    weather: dict[str, Any] | None,
     transport: list[str] | None,
     recommended_hotel: dict[str, Any] | None,
     mobility_plan: dict[str, Any] | None,
@@ -55,14 +54,11 @@ def format_planning_answer(
         fallback_lines=itinerary_sections["stay_lines"],
     )
     transport_lines = _format_transport_lines(transport or [])
-    weather_lines = _format_weather_lines(weather, mobility_plan)
     checklist_lines = coordinator_sections["checklist_lines"]
     challenge_lines = coordinator_sections["challenge_lines"]
     tips_lines = _merge_unique_lines(
         research_sections["tip_lines"] + itinerary_sections["note_lines"] + challenge_lines + checklist_lines
     )
-    follow_up = build_time_confirmation_question(destination)
-
     intro = research_sections["overview"]
     if not intro:
         intro = (
@@ -76,9 +72,6 @@ def format_planning_answer(
         "Tóm tắt:",
         intro,
     ]
-    if weather_lines:
-        lines.extend(["", "Thời tiết / thời điểm:", *weather_lines])
-
     if highlight_lines:
         lines.extend(["", "Điểm nổi bật:", *highlight_lines])
 
@@ -96,13 +89,6 @@ def format_planning_answer(
     if tips_lines:
         lines.extend(["", "Mẹo & lưu ý:", *tips_lines[:10]])
 
-    lines.extend(
-        [
-            "",
-            "Thêm một điều:",
-            follow_up,
-        ]
-    )
     return "\n".join(line for line in lines if line is not None).strip()
 
 
@@ -352,52 +338,6 @@ def _format_stay_lines(
 
 def _format_transport_lines(transport: list[str]) -> list[str]:
     return [_dashify(line) for line in transport if str(line).strip()]
-
-
-def _format_weather_lines(
-    weather: dict[str, Any] | None,
-    mobility_plan: dict[str, Any] | None,
-) -> list[str]:
-    if not weather:
-        lines = [
-            "- Chưa xác nhận ngày cụ thể, lịch trình hiện là bản tham khảo.",
-            "- Khi bạn cho biết ngày hoặc mùa đi, tôi sẽ kiểm tra thời tiết và nhắc bạn chuẩn bị.",
-        ]
-        if mobility_plan:
-            fastest = str(mobility_plan.get("fastest_mode_label") or "").strip()
-            eta = mobility_plan.get("avg_eta_min")
-            if fastest:
-                extra = f"- For now, the fastest transport option being prioritized is {fastest}"
-                if isinstance(eta, (int, float)):
-                    extra += f", with an average ETA of about {int(round(float(eta)))} minutes."
-                lines.append(extra)
-        return lines
-
-    location = str(weather.get("location") or "destination").strip()
-    description = str(weather.get("description") or "").strip()
-    temp = weather.get("temp_c")
-    wind = weather.get("wind_kmh")
-    line = f"- Thời tiết hiện tại tại {location}:"
-    detail_bits: list[str] = []
-    if description:
-        detail_bits.append(description)
-    if isinstance(temp, (int, float)):
-        detail_bits.append(f"{float(temp):.1f}°C")
-    if isinstance(wind, (int, float)):
-        detail_bits.append(f"wind ~{float(wind):.0f} km/h")
-    if detail_bits:
-        line += " " + ", ".join(detail_bits) + "."
-    out = [line]
-    if mobility_plan:
-        fastest = str(mobility_plan.get("fastest_mode_label") or "").strip()
-        eta = mobility_plan.get("avg_eta_min")
-        if fastest:
-            note = f"- Based on movement analysis, the fastest current option is {fastest}"
-            if isinstance(eta, (int, float)):
-                note += f" with an average ETA of about {int(round(float(eta)))} minutes."
-            out.append(note)
-    out.append("- If you change your travel dates, updating the weather forecast will help refine the schedule.")
-    return out
 
 
 def _render_day_block(title: str, lines: list[str]) -> str:

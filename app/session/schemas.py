@@ -96,7 +96,6 @@ class ChatResponse(BaseModel):
     plan_validation: dict[str, Any] | None = None
     research: str | None = None
     coordinator_plan: str | None = None
-    weather: dict[str, Any] | None = None
     transport: list[str] | None = None
     recommended_hotel: dict[str, Any] | None = None
     mobility_plan: dict[str, Any] | None = None

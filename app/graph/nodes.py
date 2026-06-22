@@ -29,8 +29,8 @@ from app.places.metadata import extract_trip_days
 from app.itinerary.stay import build_stay_recommendations
 
 _INTAKE_FOLLOW_UP_ANSWER = (
-    "Chưa đủ thông tin để tạo lịch trình. "
-    "Vui lòng trả lời các câu hỏi bổ sung bên dưới."
+    "Chưa đủ thông tin để tạo lịch trình tốt nhất cho bạn. "
+    "Vui lòng trả lời các câu hỏi bổ sung bên dưới để chúng tôi hiểu rõ hơn về nhu cầu của bạn."
 )
 
 _TRACE_TITLE_MAP = {
@@ -150,7 +150,6 @@ def retrieval_node(state: TravelGraphState) -> dict[str, Any]:
     return {
         "places": result.places,
         "local_candidates_considered": result.local_candidates_considered,
-        "weather": result.weather,
         "guide": result.guide,
         "transport": result.transport,
         "recommended_hotel": result.recommended_hotel,
@@ -173,10 +172,9 @@ def planning_node(state: TravelGraphState) -> dict[str, Any]:
     timings["planning_prepare_query_ms"] = round((perf_counter() - step_started) * 1000, 1)
     retry_query = str(state.get("retry_query") or "").strip()
 
-    # Places, weather and context come from retrieval_node (A3) via state.
+    # Places and context come from retrieval_node (A3) via state.
     places = list(state.get("places", []) or [])
     local_candidates_considered = int(state.get("local_candidates_considered", 0) or 0)
-    weather = state.get("weather")
     guide = str(state.get("guide") or "")
     transport = state.get("transport")
     recommended_hotel = state.get("recommended_hotel")
@@ -191,7 +189,6 @@ def planning_node(state: TravelGraphState) -> dict[str, Any]:
     context = build_context_payload(
         query=rag_query,
         places=places,
-        weather=weather,
         transport=transport,
         recommended_hotel=recommended_hotel,
         mobility_plan=mobility_plan,
@@ -264,7 +261,6 @@ def planning_node(state: TravelGraphState) -> dict[str, Any]:
         "planning_query": itinerary_query,
         "places": places,
         "local_candidates_considered": local_candidates_considered,
-        "weather": weather,
         "guide": guide,
         "transport": transport,
         "recommended_hotel": recommended_hotel,
@@ -355,14 +351,23 @@ def validator_node(state: TravelGraphState) -> dict[str, Any]:
 
 
 def clarify_response_node(state: TravelGraphState) -> dict[str, Any]:
+    from app.graph.intake import generate_contextual_suggestions
+    
     timings = _copy_timings(state)
     trace = _append_trace(state, "response_service")
+    collected = state.get("collected_info") or {}
+    follow_up_questions = list(state.get("follow_up_questions", []))
+    
+    # Add contextual suggestions based on collected information
+    suggestions = generate_contextual_suggestions(collected)
+    all_questions = follow_up_questions + suggestions
+    
     response_payload = {
         "answer": _INTAKE_FOLLOW_UP_ANSWER,
         "conversation_stage": "intake",
-        "collected_info": state.get("collected_info"),
+        "collected_info": collected,
         "missing_fields": state.get("missing_fields", []),
-        "follow_up_questions": state.get("follow_up_questions", []),
+        "follow_up_questions": all_questions,
         "trace": trace,
         "sources": [],
         "plan": None,
@@ -370,7 +375,6 @@ def clarify_response_node(state: TravelGraphState) -> dict[str, Any]:
         "plan_validation": None,
         "research": None,
         "coordinator_plan": None,
-        "weather": None,
         "transport": None,
         "recommended_hotel": None,
         "mobility_plan": None,
@@ -408,7 +412,6 @@ def response_node(state: TravelGraphState) -> dict[str, Any]:
             research=state.get("research"),
             plan=state.get("plan"),
             coordinator_plan=state.get("coordinator_plan"),
-            weather=state.get("weather"),
             transport=state.get("transport"),
             recommended_hotel=state.get("recommended_hotel"),
             mobility_plan=state.get("mobility_plan"),
@@ -437,7 +440,6 @@ def response_node(state: TravelGraphState) -> dict[str, Any]:
         "plan_validation": state.get("plan_validation"),
         "research": state.get("research"),
         "coordinator_plan": state.get("coordinator_plan"),
-        "weather": state.get("weather"),
         "transport": state.get("transport"),
         "recommended_hotel": state.get("recommended_hotel"),
         "mobility_plan": state.get("mobility_plan"),

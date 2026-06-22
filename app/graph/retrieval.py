@@ -17,7 +17,6 @@ _SUBTASK_CATEGORY_TO_SOURCE_KIND = {
 @dataclass
 class RetrievalResult:
     places: list[dict[str, Any]] = field(default_factory=list)
-    weather: dict[str, Any] | None = None
     guide: str = ""
     transport: list[str] | None = None
     recommended_hotel: dict[str, Any] | None = None
@@ -38,7 +37,7 @@ def retrieve_for_subtasks(
 
     query = _build_query(collected_info)
 
-    # Run a single full retrieval to get weather, transport, hotel, mobility.
+    # Run a single full retrieval to get transport, hotel, mobility.
     base = retrieve_trip_artifacts(
         query=query,
         category=None,
@@ -82,7 +81,6 @@ def retrieve_for_subtasks(
 
     return RetrievalResult(
         places=merged_places,
-        weather=base.weather,
         guide=base.guide,
         transport=base.transport,
         recommended_hotel=base.recommended_hotel,
@@ -108,7 +106,6 @@ def _retrieve_full(
     places, trace = _supplement_hotels_if_needed(list(base.places), collected_info, list(base.trace))
     return RetrievalResult(
         places=places,
-        weather=base.weather,
         guide=base.guide,
         transport=base.transport,
         recommended_hotel=base.recommended_hotel,

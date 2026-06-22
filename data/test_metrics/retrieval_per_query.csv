@@ -1,0 +1,11 @@
+query,chroma_hit,local_sufficient,num_chunks,mean_chunk_score,num_places,mean_fit_score,active_intent_tags,intent_covered,latency_ms
+Có những địa điểm tham quan nổi tiếng nào ở Đà Nẵng?,True,True,6,0.6696,5,68.6,,,4176.7
+Nhà hàng hải sản ngon ở Đà Nẵng?,True,False,6,0.6399,5,34.7,food,False,581.4
+Khách sạn gần biển Mỹ Khê?,True,True,6,0.6772,5,87.3,beach,True,340.9
+Hoạt động giải trí ban đêm ở Đà Nẵng?,True,True,6,0.5376,5,63.3,,,334.2
+Điểm tham quan văn hóa lịch sử tại Đà Nẵng?,True,True,6,0.5747,5,93.8,heritage,True,403.8
+Cần làm gì trong 1 ngày ở Đà Nẵng?,True,True,6,0.5359,5,73.9,,,363.9
+Cafe đẹp view biển ở Đà Nẵng?,True,True,6,0.5814,5,54.6,"beach,cafe",False,340.1
+Địa điểm mua sắm ở Đà Nẵng?,True,True,6,0.595,5,80.7,shopping,True,356.1
+Núi Sơn Trà có gì đặc biệt?,True,True,6,0.5415,5,93.8,nature,True,321.9
+Bảo tàng Chăm ở đâu?,True,True,6,0.5421,5,90.8,museum,True,336.5

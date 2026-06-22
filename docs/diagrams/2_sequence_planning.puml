@@ -1,0 +1,48 @@
+@startuml sequence_planning_simplified
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontSize 12
+skinparam sequenceArrowThickness 1.5
+skinparam ParticipantBorderColor #555
+skinparam SequenceLifeLineBorderColor #AAAAAA
+skinparam NoteBackgroundColor #FFFDE7
+skinparam NoteBorderColor #F9A825
+
+participant "Planning Agent\n[A3]" as A3 #FFF9C4
+participant "SQLite" as DB #F3E5F5
+participant "VRP Optimizer" as VRP #E8F5E9
+participant "OpenAI API" as OpenAI #FCE4EC
+participant "TrackAsia API" as TrackAsia #E0F7FA
+participant "Validator Agent\n[A4]" as A4 #FFCCBC
+
+activate A3
+
+A3 -> A3 : receive collected_info\nand retrieved places
+
+A3 -> DB : load attractions,\nrestaurants, hotels
+DB --> A3 : candidate place pool
+
+A3 -> A3 : enrich missing coordinates\nrank places by relevance
+
+A3 -> VRP : optimize itinerary\nwith attractions + restaurants
+alt route plan generated
+VRP --> A3 : daily itinerary structure
+else optimizer unavailable
+A3 -> OpenAI : generate itinerary plan\nfrom candidate places
+OpenAI --> A3 : fallback itinerary
+end
+
+A3 -> A3 : select recommended hotel\nbased on budget and location
+
+loop each travel day
+A3 -> TrackAsia : calculate route\nbetween daily places
+TrackAsia --> A3 : distance + ETA
+end
+
+A3 -> A3 : assemble draft plan\nplan + route_plan + hotel
+
+A3 --> A4 : draft_plan\n{ plan, route_plan,\n  recommended_hotel,\n  places_for_validation }
+
+deactivate A3
+
+@enduml

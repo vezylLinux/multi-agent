@@ -1499,6 +1499,88 @@ textarea {
   overflow-y: auto;
 }
 
+.follow-up-questions-block {
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(255, 251, 245, 0.95), rgba(246, 237, 224, 0.9));
+  overflow: hidden;
+  margin-top: 16px;
+}
+
+.follow-up-header {
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(177, 77, 45, 0.04);
+}
+
+.follow-up-header h3 {
+  margin: 0 0 4px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.follow-up-header p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.follow-up-list {
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.follow-up-item {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(177, 77, 45, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  transition: all 0.2s ease;
+}
+
+.follow-up-item:hover {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(177, 77, 45, 0.2);
+}
+
+.follow-up-question {
+  flex: 1;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.follow-up-action {
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: rgba(177, 77, 45, 0.08);
+  color: var(--brand-deep);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.follow-up-action:hover {
+  background: var(--brand-deep);
+  color: white;
+  border-color: var(--brand-deep);
+}
+
+.follow-up-action:active {
+  transform: scale(0.98);
+}
+
 .follow-ups ul {
   margin: 12px 0 0;
   padding-left: 20px;

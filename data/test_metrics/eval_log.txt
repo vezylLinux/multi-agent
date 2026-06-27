@@ -1,0 +1,81 @@
+SQLite database initialized successfully
+Output directory : D:\multi-agent-system-for-tourism-planning\data\test_metrics
+Timestamp        : 2026-06-09T18:02:12
+Embedding model  : text-embedding-3-small
+LLM model        : gpt-4o-mini
+
+================================================================
+  1. Retrieval & Grounding Metrics
+================================================================
+  Queries: 10
+  [1/10] Có những địa điểm tham quan nổi tiếng nào ở Đà Nẵng?
+  [2/10] Nhà hàng hải sản ngon ở Đà Nẵng?
+  [3/10] Khách sạn gần biển Mỹ Khê?
+  [4/10] Hoạt động giải trí ban đêm ở Đà Nẵng?
+  [5/10] Điểm tham quan văn hóa lịch sử tại Đà Nẵng?
+  [6/10] Cần làm gì trong 1 ngày ở Đà Nẵng?
+  [7/10] Cafe đẹp view biển ở Đà Nẵng?
+  [8/10] Địa điểm mua sắm ở Đà Nẵng?
+  [9/10] Núi Sơn Trà có gì đặc biệt?
+  [10/10] Bảo tàng Chăm ở đâu?
+
+  chroma_hit_rate                              100.0%
+  local_catalog_sufficient_rate                90.0%
+  mean_chunk_similarity_score                  0.589
+  mean_customer_fit_score                      74.1
+  intent_coverage_rate                         71.4%
+  latency_p50_ms                               356
+  latency_p95_ms                               4177
+
+  CSV -> D:\multi-agent-system-for-tourism-planning\data\test_metrics\retrieval_per_query.csv
+
+================================================================
+  2. Itinerary Planning Metrics
+================================================================
+  Queries: 5
+  [1/5] lịch trình 3 ngày 2 đêm Đà Nẵng, thích biển và ẩm thực, ngân
+  [2/5] lịch trình 2 ngày Đà Nẵng, quan tâm văn hóa lịch sử và mua s
+  [3/5] lịch trình 4 ngày Đà Nẵng, gia đình có trẻ em, thích thiên n
+  [4/5] lịch trình 1 ngày Đà Nẵng, backpacker, thích ẩm thực và cà p
+  [5/5] lịch trình 3 ngày Đà Nẵng, cặp đôi, thích văn hóa và ẩm thực
+
+  validation_pass_rate                         100.0%
+  retry_trigger_rate                           0.0%
+  mean_max_leg_km                              12.5
+  issue_distribution                           {}
+
+  CSV -> D:\multi-agent-system-for-tourism-planning\data\test_metrics\itinerary_per_query.csv
+
+================================================================
+  3. Giskard RAGET Metrics
+================================================================
+  Knowledge base: 2164 chunks from rag_documents.json
+2026-06-09 18:03:43,941 pid:12024 MainThread giskard.llm.embeddings INFO     No embedding model set though giskard.llm.set_embedding_model. Defaulting to openai/text-embedding-3-small since OPENAI_API_KEY is set.
+  Loading testset from data\test_metrics\giskard_testset.json
+  Running RAGET evaluation…
+
+  overall_correctness                          0.7
+  knowledge_base_score                         0.9
+    component [GENERATOR]                      0.633
+    component [RETRIEVER]                      0.667
+    component [REWRITER]                       0.444
+    component [ROUTING]                        1.0
+    component [KNOWLEDGE_BASE]                 0.933
+    by_type [complex]                          0.5
+    by_type [conversational]                   0.667
+    by_type [distracting element]              0.333
+    by_type [double]                           0.333
+    by_type [simple]                           1.0
+    by_type [situational]                      1.0
+
+  CSV -> D:\multi-agent-system-for-tourism-planning\data\test_metrics\giskard_per_question.csv
+
+================================================================
+  Files Written
+================================================================
+  eval_report.json                             D:\multi-agent-system-for-tourism-planning\data\test_metrics\eval_report.json
+  eval_log.txt                                 D:\multi-agent-system-for-tourism-planning\data\test_metrics\eval_log.txt
+  giskard_per_question.csv                     D:\multi-agent-system-for-tourism-planning\data\test_metrics\giskard_per_question.csv
+  giskard_testset.json                         D:\multi-agent-system-for-tourism-planning\data\test_metrics\giskard_testset.json
+  itinerary_per_query.csv                      D:\multi-agent-system-for-tourism-planning\data\test_metrics\itinerary_per_query.csv
+  retrieval_per_query.csv                      D:\multi-agent-system-for-tourism-planning\data\test_metrics\retrieval_per_query.csv

@@ -134,6 +134,33 @@ def _next_unused(items: List[dict], used: set[str]) -> dict | None:
     return None
 
 
+def _nearest_unused_restaurant(
+    food_pool: List[dict],
+    anchor: dict | None,
+    used_keys: set[str],
+) -> dict | None:
+    anchor_pt = _resolve_point_for_map(anchor) if anchor else None
+    if not anchor_pt:
+        return _next_unused(food_pool, used_keys)
+    best: dict | None = None
+    best_dist = float("inf")
+    fallback: dict | None = None
+    for p in food_pool:
+        k = _place_key(p)
+        if not k or k in used_keys:
+            continue
+        pt = _resolve_point_for_map(p)
+        if not pt:
+            if fallback is None:
+                fallback = p
+            continue
+        dist = _haversine_km(anchor_pt[0], anchor_pt[1], pt[0], pt[1])
+        if dist < best_dist:
+            best_dist = dist
+            best = p
+    return best or fallback
+
+
 def _llm_plan_itinerary(
     destinations: List[dict],
     restaurants: List[dict],
@@ -160,7 +187,21 @@ def _llm_plan_itinerary(
     def _compact(p: dict, idx: int) -> str:
         name = str(p.get("name") or "").strip()
         addr = str(p.get("address") or str(p.get("city") or "")).strip()
-        return f"{idx}: {name} | {addr}" if addr else f"{idx}: {name}"
+        district = _primary_district_key(p)
+        area_tag = f"[{district}]" if district else ""
+        label = f"{addr} {area_tag}".strip() if addr else area_tag
+        return f"{idx}: {name} | {label}" if label else f"{idx}: {name}"
+
+    # Pre-cluster attractions by district so the LLM can assign whole clusters per day.
+    district_clusters: dict[str, list[int]] = {}
+    for i, p in enumerate(destinations):
+        dk = _primary_district_key(p) or "other"
+        district_clusters.setdefault(dk, []).append(i)
+
+    cluster_lines = "\n".join(
+        f"  cluster [{dk}]: indices {idxs}"
+        for dk, idxs in sorted(district_clusters.items())
+    )
 
     dest_lines = "\n".join(_compact(p, i) for i, p in enumerate(destinations))
     rest_lines = "\n".join(_compact(p, i) for i, p in enumerate(restaurants))
@@ -177,14 +218,16 @@ def _llm_plan_itinerary(
     user_prompt = (
         f"Plan a {total_days}-day trip to {city}.\n"
         f'User request: "{query}"\n\n'
-        f"Attractions (index: name | area):\n{dest_lines}\n\n"
+        f"Attractions (index: name | district):\n{dest_lines}\n\n"
+        f"Geographic clusters (assign entire clusters to the same day to minimise travel):\n{cluster_lines}\n\n"
         f"Restaurants (index: name | area):\n{rest_lines}\n\n"
         f"Hotels (index: name | area):\n{hotel_lines}\n\n"
         "Rules:\n"
         "- Use each attraction index at most once across all days\n"
         "- Use each restaurant index at most once across all days\n"
+        "- CRITICAL: morning_idx and afternoon_idx on the same day MUST be from the same district cluster.\n"
+        "  Never mix attractions from son_tra and ngu_hanh_son on the same day — they are 20+ km apart.\n"
         "- Match user preferences (e.g. hai san=seafood restaurants, tham chua=temple attractions, di bien=beach spots)\n"
-        "- Group morning and afternoon attractions in the same geographic area when possible\n"
         "- Choose meals near the day's attractions\n"
         "- Viết day_theme, morning_action, afternoon_action, evening_action bằng tiếng Việt\n"
         "- day_theme: nhãn ngắn tóm tắt chủ đề ngày (ví dụ: 'Văn hoá & Tâm linh', 'Biển & Thư giãn')\n"
@@ -270,6 +313,14 @@ def build_trip_plan_payload(query: str, places: List[dict], strict_mode: bool = 
     _enrich_coords(food_pool)
     _enrich_coords(hotels)
 
+    # Remove places whose coordinates fall outside the target city bounding box.
+    # This prevents out-of-area places (e.g. Quảng Nam waterfalls mis-tagged as
+    # Da Nang) from creating extreme legs in the route plan.
+    city_bbox = _city_bbox(strict_target_city_key or _city_key_from_text(city))
+    if city_bbox:
+        attraction_pool = _filter_by_bbox(attraction_pool, city_bbox)
+        food_pool = _filter_by_bbox(food_pool, city_bbox)
+
     # Try VRP first to get geographically optimal day assignments.
     # Falls back to LLM if VRP is unavailable or returns no routes.
     vrp_days: dict[int, dict] = {}
@@ -328,17 +379,17 @@ def build_trip_plan_payload(query: str, places: List[dict], strict_mode: bool = 
             used_attraction_keys.add(_place_key(afternoon))
 
         if breakfast is None or _place_key(breakfast) in used_restaurant_keys:
-            breakfast = _next_unused(food_pool, used_restaurant_keys)
+            breakfast = _nearest_unused_restaurant(food_pool, morning, used_restaurant_keys)
         if breakfast:
             used_restaurant_keys.add(_place_key(breakfast))
 
         if lunch is None or _place_key(lunch) in used_restaurant_keys:
-            lunch = _next_unused(food_pool, used_restaurant_keys)
+            lunch = _nearest_unused_restaurant(food_pool, morning, used_restaurant_keys)
         if lunch:
             used_restaurant_keys.add(_place_key(lunch))
 
         if dinner is None or _place_key(dinner) in used_restaurant_keys:
-            dinner = _next_unused(food_pool, used_restaurant_keys)
+            dinner = _nearest_unused_restaurant(food_pool, afternoon, used_restaurant_keys)
         if dinner:
             used_restaurant_keys.add(_place_key(dinner))
 
@@ -354,6 +405,8 @@ def build_trip_plan_payload(query: str, places: List[dict], strict_mode: bool = 
                 strict_target_city_key or _city_key_from_text(city),
             ),
         })
+
+    _rebalance_day_attractions(daily_frames)
 
     stay_plan = _select_stay_plan(
         daily_frames=daily_frames,
@@ -449,6 +502,138 @@ def build_trip_plan_payload(query: str, places: List[dict], strict_mode: bool = 
         "route_plan": route_plan,
         "all_places": all_places,
     }
+
+
+_CITY_BBOXES: dict[str, tuple[float, float, float, float]] = {
+    # (lat_min, lat_max, lon_min, lon_max)
+    # Da Nang urban+coastal strip — excludes far-western mountains (Bà Nà, Núi Chúa
+    # at lon~107.9) which require a dedicated full-day trip and create >25 km legs
+    # when combined with city/beach attractions.
+    "da_nang": (15.92, 16.22, 108.00, 108.45),
+    "hoi_an":  (15.75, 15.95, 108.25, 108.45),
+}
+
+
+def _city_bbox(city_key: str) -> tuple[float, float, float, float] | None:
+    return _CITY_BBOXES.get(city_key.strip().lower())
+
+
+def _filter_by_bbox(
+    places: List[dict],
+    bbox: tuple[float, float, float, float],
+) -> List[dict]:
+    """Remove places whose coordinates are outside the given bounding box.
+    Places without coordinates are kept (coord may be filled later or missing)."""
+    lat_min, lat_max, lon_min, lon_max = bbox
+    result: List[dict] = []
+    for p in places:
+        lat = p.get("lat")
+        lon = p.get("lon")
+        if not isinstance(lat, (int, float)) or not isinstance(lon, (int, float)):
+            result.append(p)
+            continue
+        if lat_min <= float(lat) <= lat_max and lon_min <= float(lon) <= lon_max:
+            result.append(p)
+    return result
+
+
+_GEO_REBALANCE_THRESHOLD_KM = 15.0
+
+# Districts whose centroids are reliably > 20 km apart — used when coords are absent.
+_FAR_DISTRICT_PAIRS: frozenset[frozenset] = frozenset({
+    frozenset({"son tra", "ngu hanh son"}),
+    frozenset({"son tra", "hoa vang"}),
+    frozenset({"lien chieu", "ngu hanh son"}),
+    frozenset({"lien chieu", "hoa vang"}),
+})
+
+
+def _districts_are_far(p_a: dict | None, p_b: dict | None) -> bool:
+    """Return True if two places are from a known far-apart district pair."""
+    if not p_a or not p_b:
+        return False
+    dk_a = _primary_district_key(p_a)
+    dk_b = _primary_district_key(p_b)
+    if not dk_a or not dk_b or dk_a == dk_b:
+        return False
+    return frozenset({dk_a, dk_b}) in _FAR_DISTRICT_PAIRS
+
+
+def _rebalance_day_attractions(daily_frames: List[dict]) -> None:
+    """Swap afternoon attractions between days to reduce extreme same-day leg distances.
+
+    Two strategies applied in sequence:
+    1. Coordinate-based: compute haversine; swap if it reduces the worst distance.
+    2. District-based fallback: for places without coords, use known far-district pairs.
+    Mutates daily_frames in-place.
+    """
+    MAX_PASSES = 4
+    for _ in range(MAX_PASSES):
+        improved = False
+        for i, frame_a in enumerate(daily_frames):
+            m_a = frame_a.get("morning")
+            af_a = frame_a.get("afternoon")
+            if not m_a or not af_a:
+                continue
+
+            m_a_pt = _resolve_point_for_map(m_a)
+            af_a_pt = _resolve_point_for_map(af_a)
+
+            # Determine whether this pair is problematic
+            coord_based = m_a_pt and af_a_pt
+            if coord_based:
+                dist_a = _haversine_km(m_a_pt[0], m_a_pt[1], af_a_pt[0], af_a_pt[1])
+                pair_is_bad = dist_a > _GEO_REBALANCE_THRESHOLD_KM
+            else:
+                dist_a = float("inf")
+                pair_is_bad = _districts_are_far(m_a, af_a)
+
+            if not pair_is_bad:
+                continue
+
+            best_j: int | None = None
+            best_score = dist_a  # lower is better
+            for j, frame_b in enumerate(daily_frames):
+                if j == i:
+                    continue
+                af_b = frame_b.get("afternoon")
+                if not af_b:
+                    continue
+
+                af_b_pt = _resolve_point_for_map(af_b)
+                if coord_based and af_b_pt:
+                    new_dist_a = _haversine_km(m_a_pt[0], m_a_pt[1], af_b_pt[0], af_b_pt[1])
+                    if new_dist_a >= dist_a:
+                        continue
+                    # Allow swap as long as day B doesn't exceed the HARD ceiling (1.5x threshold).
+                    # We prefer fixing day A's extreme leg even if day B gets somewhat worse.
+                    m_b = frame_b.get("morning")
+                    if m_b:
+                        m_b_pt = _resolve_point_for_map(m_b)
+                        if m_b_pt and af_a_pt:
+                            new_dist_b = _haversine_km(m_b_pt[0], m_b_pt[1], af_a_pt[0], af_a_pt[1])
+                            if new_dist_b > _GEO_REBALANCE_THRESHOLD_KM * 1.5:
+                                continue
+                    if new_dist_a < best_score:
+                        best_score = new_dist_a
+                        best_j = j
+                else:
+                    # Fallback: prefer swapping with an afternoon from the same district as morning
+                    dk_m = _primary_district_key(m_a)
+                    dk_af_b = _primary_district_key(af_b)
+                    if dk_m and dk_af_b and dk_m == dk_af_b:
+                        best_j = j
+                        break  # take first same-district candidate
+
+            if best_j is not None:
+                daily_frames[i]["afternoon"], daily_frames[best_j]["afternoon"] = (
+                    daily_frames[best_j]["afternoon"],
+                    daily_frames[i]["afternoon"],
+                )
+                improved = True
+
+        if not improved:
+            break
 
 
 def _infer_day_theme(morning: dict | None, afternoon: dict | None) -> str:

@@ -37,6 +37,7 @@ type AssistantMessageMetadata = Partial<ChatResponse> & {
 type DaySlotSummary = {
   label: string;
   text: string;
+  mapUrl: string | null;
 };
 
 type DaySummary = {
@@ -246,9 +247,21 @@ function extractConversationSignals(conversation: ConversationDetail | null): {
     }
 
     const trace = normalizeTrace((message.metadata as { trace?: string[] }).trace);
-    const followUps = Array.isArray((message.metadata as { follow_up_questions?: string[] }).follow_up_questions)
+    let followUps = Array.isArray((message.metadata as { follow_up_questions?: string[] }).follow_up_questions)
       ? ((message.metadata as { follow_up_questions?: string[] }).follow_up_questions || []).map((item) => String(item))
       : [];
+    
+    // Filter out time-specific questions (about trip timing/date)
+    followUps = followUps.filter((q) => {
+      const lowerQ = String(q).toLowerCase();
+      return !lowerQ.includes("thời gian cụ thể") && 
+             !lowerQ.includes("mấy ngày") && 
+             !lowerQ.includes("ngày nào") &&
+             !lowerQ.includes("time") &&
+             !lowerQ.includes("when") &&
+             !lowerQ.includes("Bạn dự định đi");
+    });
+    
     const debugSteps = Array.isArray((message.metadata as { debug_steps?: DebugStep[] }).debug_steps)
       ? ((message.metadata as { debug_steps?: DebugStep[] }).debug_steps || [])
       : [];
@@ -624,7 +637,7 @@ function renderMessageContent(content: string): ReactNode {
 function extractPlaceNames(line: string): string[] {
   const names: string[] = [];
   const seen = new Set<string>();
-  const pattern = /\bat\s+([^(\n.;]+?)(?=\s*(?:\(|—|\.|;|$))/gi;
+  const pattern = /(?:\bat\b|tại)\s+([^(\n.;]+?)(?=\s*(?:\(|—|\.|;|$))/gi;
 
   for (const match of line.matchAll(pattern)) {
     const name = match[1]?.replace(/\s+/g, " ").replace(/^[,\-\s]+|[,\-\s]+$/g, "").trim();
@@ -642,6 +655,10 @@ function extractPlaceNames(line: string): string[] {
   return names;
 }
 
+function stripEmoji(str: string): string {
+  return str.replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, "").replace(/\s+/g, " ").trim();
+}
+
 function summarizeSlotText(line: string, label: string): string {
   const names = extractPlaceNames(line);
   if (names.length >= 2 && label === "Morning") {
@@ -652,7 +669,8 @@ function summarizeSlotText(line: string, label: string): string {
   }
 
   const fallback = line
-    .replace(/^•\s*(Morning|Noon|Afternoon|Evening):/i, "")
+    .replace(/^•\s*(Buổi sáng|Buổi trưa|Buổi chiều|Buổi tối|Morning|Noon|Afternoon|Evening):/i, "")
+    .replace(/^(Ăn sáng|Ăn trưa|Ăn tối|Tham quan|Ghé thăm|Dừng chân)\s+tại\s+/i, "")
     .replace(/Activity:\s*/gi, "")
     .replace(/\s+/g, " ")
     .trim();
@@ -660,7 +678,17 @@ function summarizeSlotText(line: string, label: string): string {
   return fallback.length > 96 ? `${fallback.slice(0, 93)}...` : fallback;
 }
 
-function parseDaySlot(line: string): DaySlotSummary | null {
+function extractMapUrlFromLine(line: string, nameLookup: Map<string, VerifiedPlaceInfo>): string | null {
+  const lineLower = line.toLowerCase();
+  for (const [normalizedName, place] of nameLookup) {
+    if (place.mapUrl && lineLower.includes(normalizedName)) {
+      return place.mapUrl;
+    }
+  }
+  return null;
+}
+
+function parseDaySlot(line: string, nameLookup: Map<string, VerifiedPlaceInfo>): DaySlotSummary | null {
   const slots = [
     { prefix: "• Buổi sáng:", label: "morning" },
     { prefix: "• Buổi trưa:", label: "noon" },
@@ -682,10 +710,17 @@ function parseDaySlot(line: string): DaySlotSummary | null {
     return null;
   }
 
-  return { label: matched.label, text };
+  const mapUrl = extractMapUrlFromLine(line, nameLookup);
+  return { label: matched.label, text, mapUrl };
 }
 
-function parsePlanDays(planText: string): DaySummary[] {
+function parsePlanDays(planText: string, verifiedPlaces: VerifiedPlaceInfo[] = []): DaySummary[] {
+  const nameLookup = new Map<string, VerifiedPlaceInfo>();
+  for (const p of verifiedPlaces) {
+    const key = p.name.toLowerCase().replace(/\s+/g, " ").trim();
+    if (key && !nameLookup.has(key)) nameLookup.set(key, p);
+  }
+
   const days: DaySummary[] = [];
   let currentDay: DaySummary | null = null;
 
@@ -712,7 +747,7 @@ function parsePlanDays(planText: string): DaySummary[] {
       continue;
     }
 
-    const slot = parseDaySlot(line);
+    const slot = parseDaySlot(line, nameLookup);
     if (slot) {
       currentDay.slots.push(slot);
       continue;
@@ -966,11 +1001,11 @@ function buildPlannerSnapshot(message: DraftMessage | null): PlannerSnapshot | n
       ? (metadata.collected_info as Record<string, unknown>)
       : {};
   const planText = readString(metadata.plan) || message.content;
-  const daySummaries = parsePlanDays(planText);
+  const verifiedPlaces = extractVerifiedPlaces(metadata);
+  const daySummaries = parsePlanDays(planText, verifiedPlaces);
   const hotelInfo = extractHotelInfo(metadata);
   const stayRecommendations = extractStayRecommendations(metadata);
   const routeLegs = extractRouteLegs(metadata);
-  const verifiedPlaces = extractVerifiedPlaces(metadata);
   const followUp = Array.isArray(metadata.follow_up_questions)
     ? metadata.follow_up_questions.find((item) => typeof item === "string" && item.trim()) || null
     : null;
@@ -1068,6 +1103,15 @@ function slotVisitLabel(slot: string): string {
   return rem > 0 ? `${h}h${rem}m` : `${h}h`;
 }
 
+function normalizeSlotLabel(slot: string): string {
+  const s = slot.toLowerCase();
+  if (s === "buổi sáng" || s === "morning" || s === "breakfast") return "morning";
+  if (s === "buổi trưa" || s === "noon" || s === "lunch") return "noon";
+  if (s === "buổi chiều" || s === "afternoon") return "afternoon";
+  if (s === "buổi tối" || s === "evening" || s === "dinner") return "evening";
+  return s;
+}
+
 function parseMarkersFromPlan(
   planText: string,
   verifiedPlaces: VerifiedPlaceInfo[],
@@ -1127,7 +1171,7 @@ function parseMarkersFromPlan(
 
     const slotMatch = line.match(SLOT_RE);
     if (!slotMatch) continue;
-    const slot = slotMatch[1];
+    const slot = normalizeSlotLabel(slotMatch[1]);
     const lineLower = line.toLowerCase();
 
     for (const [normalizedName, place] of nameLookup) {
@@ -1485,12 +1529,10 @@ function MapModal({
 
 function ItineraryFlowPanel({
   snapshot,
-  followUps,
   isPending,
   onOpenMap,
 }: {
   snapshot: PlannerSnapshot | null;
-  followUps: string[];
   isPending: boolean;
   onOpenMap?: () => void;
 }) {
@@ -1595,47 +1637,6 @@ function ItineraryFlowPanel({
           </div>
         )}
 
-        {/* Validation badge */}
-        {snapshot.validation && (
-          <div className="trip-validation-row">
-            {snapshot.validation.passed === true ? (
-              <span className="val-badge val-pass">✓ Validated</span>
-            ) : snapshot.validation.passed === false ? (
-              <span className="val-badge val-fail">✗ Issues</span>
-            ) : null}
-            {snapshot.validation.retried && (
-              <span className="val-badge val-retried">↻ Retried</span>
-            )}
-            {snapshot.validation.issues.map((issue) => (
-              <span key={issue} className="val-issue-chip">{issue.replaceAll("_", " ")}</span>
-            ))}
-          </div>
-        )}
-
-        {/* Distance stats */}
-        {snapshot.distanceStats && (
-          <div className="trip-dist-row">
-            <span className="dist-stat">
-              <span className="dist-stat-label">Max leg</span>
-              <span className="dist-stat-value">{snapshot.distanceStats.maxLegKm} km</span>
-            </span>
-            <span className="dist-stat-sep" />
-            <span className="dist-stat">
-              <span className="dist-stat-label">Total</span>
-              <span className="dist-stat-value">{snapshot.distanceStats.totalKm} km</span>
-            </span>
-            <span className="dist-stat-sep" />
-            <span className="dist-stat">
-              <span className="dist-stat-label">Avg leg</span>
-              <span className="dist-stat-value">{snapshot.distanceStats.avgLegKm} km</span>
-            </span>
-            <span className="dist-stat-sep" />
-            <span className="dist-stat">
-              <span className="dist-stat-label">Legs</span>
-              <span className="dist-stat-value">{snapshot.distanceStats.legsWithDist}/{snapshot.distanceStats.totalLegs}</span>
-            </span>
-          </div>
-        )}
       </div>
 
       <div className="itinerary-day-tabs">
@@ -1668,7 +1669,7 @@ function ItineraryFlowPanel({
 
       {currentDay ? (
         <div className="itinerary-timeline">
-          {currentDay.theme ? <div className="itinerary-theme">{currentDay.theme}</div> : null}
+          {currentDay.theme ? <div className="itinerary-theme">{stripEmoji(currentDay.theme)}</div> : null}
 
           {snapshot.hotelName ? (
             <div className="timeline-stop">
@@ -1691,38 +1692,20 @@ function ItineraryFlowPanel({
 
           {currentDay.slots.map((slot, index) => {
             const isLast = index === currentDay.slots.length - 1;
-            const slotMarker = dayMarkers.find(
-              (m) => m.slot.toLowerCase() === slot.label.toLowerCase(),
-            );
-            const timeLabel = slotEstimatedTime(slot.label);
-            const visitLabel = slotVisitLabel(slot.label);
-            // Look up distance for this stop
-            const stopNameKey = slot.text.toLowerCase().slice(0, 30);
-            const legDist = slotDistanceMap[stopNameKey] ?? null;
 
             return (
               <div key={slot.label} className="timeline-stop">
                 <div className="timeline-node">
                   <div className={`timeline-dot ${slotDotClass(slot.label)}`}>{index + 1}</div>
                   {!isLast ? (
-                    <div className="timeline-line-wrap">
-                      <div className="timeline-line" />
-                      {legDist && <span className="timeline-leg-dist">{legDist}</span>}
-                    </div>
+                    <div className="timeline-line" />
                   ) : null}
                 </div>
                 <div className="timeline-body">
-                  <div className="timeline-slot-row">
-                    <span className="timeline-slot-label">{slotDisplayLabel(slot.label)}</span>
-                    {timeLabel && <span className="timeline-time">{timeLabel}</span>}
-                    {visitLabel && <span className="timeline-visit-dur">{visitLabel}</span>}
-                  </div>
-                  <span className="timeline-stop-name">{slot.text}</span>
-                  {slotMarker?.activity && (
-                    <span className="timeline-activity">{slotMarker.activity.slice(0, 100)}{slotMarker.activity.length > 100 ? "…" : ""}</span>
-                  )}
-                  {slotMarker?.mapUrl && (
-                    <a className="timeline-map-link" href={slotMarker.mapUrl} target="_blank" rel="noreferrer">
+                  <span className="timeline-slot-label">{slotDisplayLabel(slot.label)}</span>
+                  <span className="timeline-stop-name">{stripEmoji(slot.text)}</span>
+                  {slot.mapUrl && (
+                    <a className="timeline-map-link" href={slot.mapUrl} target="_blank" rel="noreferrer">
                       View on map
                     </a>
                   )}
@@ -1733,31 +1716,7 @@ function ItineraryFlowPanel({
         </div>
       ) : null}
 
-      {snapshot.stayRecommendations.length > 0 ? (
-        <div className="itinerary-stay">
-          <span className="itinerary-section-label">Recommended stay</span>
-          {snapshot.stayRecommendations.map((rec) => (
-            <div key={rec.segment} className="itinerary-stay-item">
-              <span className="itinerary-stay-segment">{rec.segment}</span>
-              {rec.mapUrl ? (
-                <a className="itinerary-link timeline-hotel-name" href={rec.mapUrl} target="_blank" rel="noreferrer">
-                  {rec.name}
-                </a>
-              ) : (
-                <span className="timeline-hotel-name">{rec.name}</span>
-              )}
-              {rec.priceNote ? <span className="itinerary-stay-price">{rec.priceNote}</span> : null}
-            </div>
-          ))}
-        </div>
-      ) : null}
 
-      {followUps.length > 0 ? (
-        <div className="itinerary-followup">
-          <span>Next prompt</span>
-          <p>{followUps[0]}</p>
-        </div>
-      ) : null}
 
     </aside>
   );
@@ -2396,19 +2355,35 @@ export function ChatShell() {
                 </div>
               )}
 
-              {followUps.length > 0 ? (
-                <div className="follow-ups">
-                  <span>Follow-up prompts</span>
-                  <ul>
-                    {followUps.map((question) => (
-                      <li key={question}>{question}</li>
+              {followUps.length > 0 && (
+                <div className="follow-up-questions-block">
+                  <div className="follow-up-header">
+                    <h3>Questions for you</h3>
+                    <p>Please answer these questions to help us create the best itinerary for you:</p>
+                  </div>
+                  <div className="follow-up-list">
+                    {followUps.map((question, index) => (
+                      <div key={index} className="follow-up-item">
+                        <div className="follow-up-question">{question}</div>
+                        <button
+                          className="follow-up-action"
+                          onClick={() => {
+                            setDraft(question);
+                            document.getElementById("message")?.focus();
+                          }}
+                          type="button"
+                        >
+                          Reply
+                        </button>
+                      </div>
                     ))}
-                  </ul>
+                  </div>
                 </div>
-              ) : null}
+              )}
+
             </div>
 
-            <ItineraryFlowPanel snapshot={plannerSnapshot} followUps={followUps} isPending={activeIsPending} onOpenMap={handleOpenMap} />
+            <ItineraryFlowPanel snapshot={plannerSnapshot} isPending={activeIsPending} onOpenMap={handleOpenMap} />
           </div>
 
           <form className="composer" onSubmit={handleSubmit}>

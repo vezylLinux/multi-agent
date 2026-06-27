@@ -16,6 +16,7 @@ An AI-powered travel planning system for **Da Nang, Vietnam** built on a multi-a
 - [Key Features](#key-features)
 - [API Reference](#api-reference)
 - [Diagrams](#diagrams)
+- [Evaluation](#evaluation)
 
 ---
 
@@ -31,7 +32,6 @@ And returns:
 - **Real driving distances and ETAs** between each stop via TrackAsia Directions API
 - A **budget-aware hotel recommendation** scored by proximity to attractions
 - An **interactive map** with markers, day routes, and place detail panels
-- **Validation metrics** (max leg distance, issues, retry status)
 
 ---
 
@@ -39,7 +39,7 @@ And returns:
 
 ```
 ┌──────────────────────────────────────────────────┐
-│  Frontend  (Next.js :3001)                       │
+│  Frontend  (Next.js :3000)                       │
 │  ChatShell · ItineraryFlowPanel · DayMap         │
 └────────────────────┬─────────────────────────────┘
                      │  REST / SSE
@@ -66,7 +66,6 @@ And returns:
 │  External APIs                      │
 │  OpenRouter (gpt-4o-mini) · OpenAI  │
 │  TrackAsia (geocode + routing)      │
-│  OpenWeather (optional)             │
 └─────────────────────────────────────┘
 ```
 
@@ -84,7 +83,7 @@ Parses the user's free-text message into structured fields using an LLM call (`t
 Builds the place candidate pool:
 1. Embeds the query via OpenAI `text-embedding-3-small` (dim=1536)
 2. Searches Chroma vector store with cosine similarity + BM25-like lexical re-ranking
-3. Returns top-20 places along with weather data from TrackAsia / OpenWeather
+3. Returns top-20 places as retrieval context
 
 ### [A3] Planning Agent
 Builds the full itinerary:
@@ -116,7 +115,7 @@ Quality gate before returning to the user:
 
 ### [A5] Response Agent
 Assembles the final answer using `format_planning_answer()` (formatter.py):
-- Combines research summary + day plan + hotel + weather + tips into a coherent Vietnamese text
+- Combines research summary + day plan + hotel + tips into a coherent Vietnamese text
 - Persists conversation, messages, and plan to SQLite
 
 ---
@@ -133,8 +132,8 @@ Assembles the final answer using `format_planning_answer()` (formatter.py):
 | Vector store | Chroma (persistent local) |
 | Relational DB | SQLite |
 | Maps & Routing | TrackAsia (geocode + directions + tiles) |
-| Weather | OpenWeather API (optional) |
 | Route optimization | Custom VRP solver |
+| Containerization | Docker + Docker Compose |
 
 ---
 
@@ -145,7 +144,7 @@ Assembles the final answer using `format_planning_answer()` (formatter.py):
 │   ├── core/          # Settings, DB init, session
 │   ├── graph/         # LangGraph nodes, state, edges, LLM calls
 │   │   ├── nodes.py   # 5 agent node functions
-│   │   ├── state.py   # TravelGraphState TypedDict (47 fields)
+│   │   ├── state.py   # TravelGraphState TypedDict
 │   │   ├── intake.py  # Intent extraction prompts
 │   │   └── llm.py     # generate_answer(), render output
 │   ├── itinerary/     # Planning + validation + formatting
@@ -156,36 +155,46 @@ Assembles the final answer using `format_planning_answer()` (formatter.py):
 │   │   └── vrp.py          # VRP itinerary optimizer
 │   ├── places/        # RAG engine, scoring, metadata, repository
 │   │   ├── vector_rag.py   # retrieve_place_candidates(), re-ranking
+│   │   ├── rag.py          # RetrievalArtifacts, build_context_payload()
 │   │   ├── scoring.py      # INTEREST_KEYWORDS (bilingual VI+EN)
 │   │   ├── metadata.py     # enrich_place_record(), infer_intent_tags()
 │   │   ├── repository.py   # upsert_places(), list_places()
 │   │   └── chroma.py       # Chroma client wrapper
-│   └── tools/         # TrackAsia, Google Places, OpenWeather adapters
+│   └── tools/         # TrackAsia, Google Places adapters
 ├── frontend/
 │   ├── components/
 │   │   ├── chat-shell.tsx  # Main UI: chat + itinerary panel
 │   │   └── day-map.tsx     # TrackAsia map widget
 │   ├── services/
 │   │   └── api.ts          # REST client (chat, sessions, conversations)
-│   └── app/
-│       └── globals.css     # All styling
+│   ├── app/
+│   │   └── globals.css     # All styling
+│   └── Dockerfile          # Two-stage Next.js production image
 ├── scripts/
 │   ├── preprocess.py            # Raw data → enrich → upsert DB
 │   ├── geocode_places.py        # Geocode via TrackAsia (adaptive rate)
+│   ├── geocode_places_trackasia.py
+│   ├── geocode_google.py
 │   ├── ingest_to_chroma.py      # Build/rebuild Chroma vector index
+│   ├── build_rag.py             # RAG pipeline builder
+│   ├── eval_rag.py              # Giskard RAGET evaluation runner
 │   └── test_log.py              # 5-query regression test → logs/
 ├── data/
 │   ├── crawl/processed/         # Source JSON (destinations, restaurants, hotels)
 │   ├── processed/               # unified_places.json (883 Da Nang places)
-│   ├── chroma/                  # Chroma persistent storage
-│   └── travel.db                # SQLite database
+│   ├── chroma/                  # Chroma persistent storage (Docker volume)
+│   └── travel.db                # SQLite database (Docker volume)
 ├── docs/
+│   ├── EVALUATION_REPORT.md     # Giskard RAGET evaluation report (Vietnamese)
 │   └── diagrams/                # PlantUML source files
 │       ├── system_architecture.puml
 │       ├── erd.puml
 │       ├── sequence_overview.puml
 │       ├── sequence_planning.puml
 │       └── sequence_validation.puml
+├── Dockerfile                   # Backend production image
+├── docker-compose.yml           # Compose: backend + frontend
+├── .dockerignore
 └── logs/                        # Test run logs (test_vi_*.log)
 ```
 
@@ -223,11 +232,41 @@ Assembles the final answer using `format_planning_answer()` (formatter.py):
 ## Setup & Running
 
 ### Prerequisites
-- Python 3.11+
-- Node.js 18+
 - API keys: `OPENROUTER_API_KEY`, `TRACKASIA_API_KEY`, `OPENAI_API_KEY` (for embeddings)
 
-### Backend
+---
+
+### Option A — Docker (recommended)
+
+```bash
+# 1. Copy and fill in API keys
+cp .env.example .env
+# Edit .env: add OPENROUTER_API_KEY, TRACKASIA_API_KEY, OPENAI_API_KEY
+
+# 2. Build images
+docker compose build
+
+# 3. Start services
+docker compose up -d
+
+# Backend:  http://localhost:8000
+# Frontend: http://localhost:3000
+```
+
+Data (`data/chroma/` and `data/travel.db`) is mounted as a host volume so it persists across restarts.
+
+To stop:
+```bash
+docker compose down
+```
+
+---
+
+### Option B — Local development
+
+**Prerequisites:** Python 3.11+, Node.js 18+
+
+**Backend:**
 
 ```bash
 # 1. Install dependencies
@@ -235,7 +274,7 @@ pip install -r requirements.txt
 
 # 2. Configure environment
 cp .env.example .env
-# Edit .env: add OPENROUTER_API_KEY, TRACKASIA_API_KEY, etc.
+# Edit .env: add OPENROUTER_API_KEY, TRACKASIA_API_KEY, OPENAI_API_KEY
 
 # 3. (First run) Preprocess and build vector index
 python scripts/preprocess.py
@@ -246,7 +285,7 @@ python scripts/ingest_to_chroma.py --recreate
 python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-### Frontend
+**Frontend:**
 
 ```bash
 cd frontend
@@ -255,10 +294,11 @@ npm install
 # Configure API URL
 echo "NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api" > .env.local
 
-npm run dev -- --port 3001
+npm run dev
+# Runs on http://localhost:3000
 ```
 
-### Run Regression Tests
+**Run regression tests:**
 
 ```bash
 python scripts/test_log.py
@@ -280,6 +320,7 @@ python scripts/test_log.py
 | **Full Vietnamese output** | All plan text, labels, and system messages in Vietnamese |
 | **Conversation history** | Cookie-backed sessions; persisted conversations and plans |
 | **Adaptive geocoding** | 0.15 s/request with exponential backoff on 429 rate limits |
+| **Docker deployment** | Single `docker compose up` starts backend + frontend production builds |
 
 ---
 
@@ -329,6 +370,24 @@ PlantUML source files in [`docs/diagrams/`](docs/diagrams/):
 | `sequence_validation.puml` | validator_node [A4] + retry logic |
 
 Render with the [PlantUML VS Code extension](https://marketplace.visualstudio.com/items?itemName=jebbs.plantuml) (`Alt+D`) or at [plantuml.com](https://plantuml.com/plantuml/uml/).
+
+---
+
+## Evaluation
+
+A full evaluation using the **Giskard RAGET** framework is documented in [`docs/EVALUATION_REPORT.md`](docs/EVALUATION_REPORT.md).
+
+The report covers:
+- Retrieval metrics: Precision@K, Recall@K, MRR, NDCG
+- Itinerary quality metrics: constraint satisfaction, diversity, distance efficiency
+- Giskard RAGET component scores: RETRIEVER, GENERATOR, REWRITER, ROUTING, KNOWLEDGE_BASE
+- Per-question analysis of 20 test cases with root cause breakdowns
+
+To re-run the evaluation:
+
+```bash
+python scripts/eval_rag.py
+```
 
 ---
 

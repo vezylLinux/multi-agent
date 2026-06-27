@@ -1,0 +1,405 @@
+{
+  "evaluated_at": "2026-06-09T18:02:12",
+  "embedding_model": "text-embedding-3-small",
+  "llm_model": "gpt-4o-mini",
+  "retrieval": {
+    "chroma_hit_rate": "100.0%",
+    "local_catalog_sufficient_rate": "90.0%",
+    "mean_chunk_similarity_score": "0.589",
+    "mean_customer_fit_score": "74.1",
+    "intent_coverage_rate": "71.4%",
+    "latency_p50_ms": 356,
+    "latency_p95_ms": 4177
+  },
+  "itinerary": {
+    "validation_pass_rate": "100.0%",
+    "retry_trigger_rate": "0.0%",
+    "mean_max_leg_km": 12.5,
+    "issue_distribution": {}
+  },
+  "giskard_raget": {
+    "overall_correctness": 0.7,
+    "knowledge_base_score": 0.9,
+    "component_scores": {
+      "GENERATOR": 0.633,
+      "RETRIEVER": 0.667,
+      "REWRITER": 0.444,
+      "ROUTING": 1.0,
+      "KNOWLEDGE_BASE": 0.933
+    },
+    "correctness_by_question_type": {
+      "complex": 0.5,
+      "conversational": 0.667,
+      "distracting element": 0.333,
+      "double": 0.333,
+      "simple": 1.0,
+      "situational": 1.0
+    },
+    "num_questions_evaluated": 20,
+    "per_question": [
+      {
+        "id": "65cb8796-635c-437b-8e97-ce3a0fb77382",
+        "question": "Khách sạn Avatar có những dịch vụ gì cho khách hàng?",
+        "reference_answer": "Khách sạn Avatar cung cấp ẩm thực Việt Nam tại nhà hàng chuyên phục vụ đồ ăn và thức uống truyền thống, và có một quán cà phê ở tầng trệt.",
+        "reference_context": "Document 357: content: một loạt các tiện nghi được trang bị mỗi phòng, bạn cũng được cung cấp thêm một số dịch vụ ngay trong khách sạn. Hãy nhớ tận hưởng nhé: Ẩm thực Việt Nam. Nếu bạn háo hức muốn trải nghiệm món ăn Việt Nam, hãy đặt bàn tại nhà hàng của chúng tôi, chuyên phục vụ đồ ăn và thức uống truyền thống. Cách trang trí trang nhã làm cho bầu không khí trở nên ấm cúng, gần gũi nhất với cuộc sống Việt Nam. Nếu bạn nghiện cà phê, chúng tôi có hẳn một quán cà phê ở tầng trệt dành cho bạn.\ntitle: Khách sạn Avatar\ncategory: accommodation",
+        "conversation_history": [],
+        "metadata": {
+          "question_type": "simple",
+          "seed_document_id": 357,
+          "topic": "Khách sạn và Du lịch"
+        },
+        "agent_answer": "Khách sạn Avatar cung cấp một loạt các tiện nghi được trang bị mỗi phòng, bạn cũng được cung cấp thêm một số dịch vụ ngay trong khách sạn. Hãy nhớ tận hưởng nhé: Ẩm thực Việt Nam. Nếu bạn háo hức muốn trải nghiệm món ăn Việt Nam, hãy đặt bàn tại nhà hàng của chúng tôi, chuyên phục vụ đồ ăn và thức uống truyền thống. Cách trang trí trang nhã làm cho bầu không khí trở nên ấm cúng, gần gũi nhất với cuộc sống Việt Nam. Nếu bạn nghiện cà phê, chúng tôi có hẳn một quán cà phê ở tầng trệt dành cho bạn.",
+        "correctness": true,
+        "correctness_reason": NaN
+      },
+      {
+        "id": "870fe658-9f2f-4a10-8b49-ad3e6006253a",
+        "question": "Khách sạn Royal Family nằm ở đâu?",
+        "reference_answer": "Khách sạn Royal Family nằm tại 39 Võ Văn Kiệt, An Hải, Quận Sơn Trà, Thành phố Đà Nẵng.",
+        "reference_context": "Document 921: content: Khách sạn Royal Family. Loai: luu tru. Vai tro lap lich: luu tru. Khu vuc: Sơn Trà, Đà Nẵng. Dia chi: 39 Võ Văn Kiệt, An Hải, Quận Sơn Trà, Thành phố Đà Nẵng. Mo ta: Khách sạn Royal Family Khách sạn Địa chỉ: 39 Võ Văn Kiệt, An Hải, Quận Sơn Trà, Thành phố Đà Nẵng Số phòng: 48 Giá: 1.400.000 - 3.500.000 Điện thoại cố định: 0236 0236 6269 898 Fax: 0236 6269 595 Email: info@royalfamilydananghotel.com Website: http://www.royalfamilydananghotel.com/.\ntitle: Khách sạn Royal Family\ncategory: accommodation",
+        "conversation_history": [],
+        "metadata": {
+          "question_type": "simple",
+          "seed_document_id": 921,
+          "topic": "Khách sạn và Du lịch"
+        },
+        "agent_answer": "Khách sạn Royal Family nằm tại địa chỉ: 39 Võ Văn Kiệt, An Hải, Quận Sơn Trà, Thành phố Đà Nẵng.",
+        "correctness": true,
+        "correctness_reason": NaN
+      },
+      {
+        "id": "f5f8d4d9-901c-459d-bd35-747399fad9b4",
+        "question": "Café 41 nằm ở đâu?",
+        "reference_answer": "Café 41, 41, Trần Cao Vân, Phố cổ Hội An, Phường Hội An, Thành phố Đà Nẵng, 51309, Việt Nam.",
+        "reference_context": "Document 1904: content: Café 41. Loai: am thuc. Vai tro lap lich: an uong. Khu vuc: Hoi An, Quang Nam. Dia chi: Café 41, 41, Trần Cao Vân, Phố cổ Hội An, Phường Hội An, Thành phố Đà Nẵng, 51309, Việt Nam. Intent tags: am_thuc, cafe. Mo ta: dia diem an uong lay tu nguon ngoai Nominatim. dia chi: Café 41, 41, Trần Cao Vân, Phố cổ Hội An, Phường Hội An, Thành phố Đà Nẵng, 51309, Việt Nam. phan loai ban do: /restaurant. tim thay tu truy van: restaurant in Hoi An, Quang Nam Café 41 - Café 41, 41, Trần Cao Vân, Phố cổ Hội An, Phường Hội An, Thành phố Đà Nẵng, 51309, Việt Nam.\ntitle: Café 41\ncategory: restaurant\n\nDocument 1905: content: Café 43. Loai: am thuc. Vai tro lap lich: an uong. Khu vuc: Hoi An, Quang Nam. Dia chi: Café 43, 43, Trần Cao Vân, Phố cổ Hội An, Phường Hội An, Thành phố Đà Nẵng, 51309, Việt Nam. Intent tags: am_thuc, cafe. Mo ta: dia diem an uong lay tu nguon ngoai Nominatim. dia chi: Café 43, 43, Trần Cao Vân, Phố cổ Hội An, Phường Hội An, Thành phố Đà Nẵng, 51309, Việt Nam. phan loai ban do: /restaurant. tim thay tu truy van: restaurant in Hoi An, Quang Nam Café 43 - Café 43, 43, Trần Cao Vân, Phố cổ Hội An, Phường Hội An, Thành phố Đà Nẵng, 51309, Việt Nam.\ntitle: Café 43\ncategory: restaurant",
+        "conversation_history": [],
+        "metadata": {
+          "question_type": "simple",
+          "seed_document_id": 1904,
+          "topic": "Nhà hàng Đà Nẵng"
+        },
+        "agent_answer": "Café 41 nằm ở địa chỉ: Café 41, 41, Trần Cao Vân, Phố cổ Hội An, Phường Hội An, Thành phố Đà Nẵng, 51309, Việt Nam.",
+        "correctness": true,
+        "correctness_reason": NaN
+      },
+      {
+        "id": "6a0b4a55-9267-4413-86dd-e7fbc443f1a2",
+        "question": "Steak Louis Restaurant & Coffee có những loại rượu vang nào trong thực đơn?",
+        "reference_answer": "Nhà hàng có rất nhiều loại rượu vang cuốn hút: vang đỏ, vang trắng,… trong thực đơn vang ấn tượng.",
+        "reference_context": "Document 1358: content: cơ hội thưởng thức rất nhiều loại rượu vang cuốn hút: vang đỏ, vang trắng,… trong thực đơn vang ấn tượng của nhà hàng. Tọa lạc tại số 02 Đức Lợi 2, không gian 3 tầng của Steak Louis Restaurant & Coffee được thiết kế theo phong cách Âu, nhẹ nhàng và hiện đại. Với sức chứa khoảng 100 khách, trong đó có 3 phòng riêng từ 10 đến 30 khách mỗi phòng, Steak Louis sẽ đáp ứng tốt nhu cầu dùng bữa tối lãng mạn của bạn.\ntitle: Steakstone LOUIS - Restaurant & Coffee\ncategory: restaurant",
+        "conversation_history": [],
+        "metadata": {
+          "question_type": "simple",
+          "seed_document_id": 1358,
+          "topic": "Nhà hàng Đà Nẵng"
+        },
+        "agent_answer": "Steak Louis Restaurant & Coffee có rất nhiều loại rượu vang cuốn hút: vang đỏ, vang trắng,… trong thực đơn vang ấn tượng của nhà hàng.",
+        "correctness": true,
+        "correctness_reason": NaN
+      },
+      {
+        "id": "307d3804-e983-4fad-aa0b-d1403091d087",
+        "question": "Khách sạn Luxury có thể tổ chức hội thảo và sự kiện với sức chứa tối đa bao nhiêu khách, và các dịch vụ đi kèm nào được cung cấp để phục vụ nhu cầu của khách tham dự?",
+        "reference_answer": "Khách sạn Luxury có sức chứa lên đến 500 khách cho hội thảo và sự kiện.",
+        "reference_context": "Document 110: content: Hội thảo-sự kiện-tiệc cưới với sức chứa lên đến 500 khách, dịch vụ Massage - Sauna nhằm đáp ứng các nhu cầu của khách. Với sức chứa lên đến 350 thực khách và không gian thoáng, tiện lợi, hệ thống Nhà hàng và Hội trường Luxury được thiết kế tại tầng 1, tầng 2 của Khách sạn.\ntitle: Khách sạn Luxury\ncategory: accommodation",
+        "conversation_history": [],
+        "metadata": {
+          "question_type": "complex",
+          "seed_document_id": 110,
+          "topic": "Khách sạn và Du lịch"
+        },
+        "agent_answer": "Khách sạn Luxury có thể tổ chức hội thảo và sự kiện với sức chứa tối đa lên đến 500 khách. Các dịch vụ đi kèm được cung cấp để phục vụ nhu cầu của khách tham dự bao gồm dịch vụ Massage - Sauna.",
+        "correctness": false,
+        "correctness_reason": "The agent provided additional information about services offered, which was not part of the reference answer. The reference answer only specified the capacity."
+      },
+      {
+        "id": "1e4bf135-8ec9-456f-b280-7be591d22500",
+        "question": "Bạn có thể cho tôi biết địa chỉ chính xác của nhà hàng Ốc bươu trộn Cô Hà, bao gồm cả tên đường và phường tại Đà Nẵng không?",
+        "reference_answer": "348-352, Đường Ông Ích Khiêm, Thạc Gián, Phường Thanh Khê, Thành phố Đà Nẵng, 50207, Việt Nam.",
+        "reference_context": "Document 1437: content: Cô Hà, 348-352, Đường Ông Ích Khiêm, Thạc Gián, Phường Thanh Khê, Thành phố Đà Nẵng, 50207, Việt Nam. phan loai ban do: /restaurant. tim thay tu truy van: restaurant in Da Nang Ốc bươu trộn Cô Hà - Ốc bươu trộn Cô Hà, 348-352, Đường Ông Ích Khiêm, Thạc Gián, Phường Thanh Khê, Thành phố Đà Nẵng, 50207, Việt Nam.\ntitle: Ốc bươu trộn Cô Hà\ncategory: restaurant",
+        "conversation_history": [],
+        "metadata": {
+          "question_type": "complex",
+          "seed_document_id": 1437,
+          "topic": "Nhà hàng Đà Nẵng"
+        },
+        "agent_answer": "Địa chỉ chính xác của nhà hàng Ốc bươu trộn Cô Hà là: 348-352, Đường Ông Ích Khiêm, Thạc Gián, Phường Thanh Khê, Thành phố Đà Nẵng, 50207, Việt Nam.",
+        "correctness": true,
+        "correctness_reason": NaN
+      },
+      {
+        "id": "f723f976-a053-4389-985d-2e92b9374301",
+        "question": "Bạn có thể cho tôi biết Rừng dừa Bảy Mẫu nằm ở vị trí nào và những đặc điểm nổi bật nào làm cho nơi đây trở thành một điểm đến thú vị cho du khách tại Đà Nẵng không?",
+        "reference_answer": "Rừng dừa Bảy Mẫu nằm ở thôn Thanh Nhứt, Thanh Tam, Vạn Lăng, Thành phố Hội An, Quảng Nam. Điểm đặc trưng của rừng dừa này là du khách sẽ tham quan khu rừng hoàn toàn trên thuyền thúng, khác với các phương tiện thông dụng ở miền Tây Nam Bộ.",
+        "reference_context": "Document 1872: content: Rừng dừa Bảy Mẫu. Loai: diem den. Vai tro lap lich: tham quan. Khu vuc: Đà Nẵng. Dia chi: thôn Thanh Nhứt, Thanh Tam, Vạn Lăng, Thành phố Hội An, Quảng Nam. Intent tags: thien_nhien. Loai hinh: Du lịch văn hóa. Mo ta: Tới đây, du khách sẽ được thăm quan khu rừng hoàn toàn trên thuyền theo phong cách miền Tây Nam Bộ. Tuy nhiên, điểm đặc trưng để phân biệt rừng dừa này với sông nước miền tây, đó là ở đây người dân không dùng phương tiện di chuyển là những chiếc thuyền thông dụng mà sử dụng thuyền thúng.\ntitle: Rừng dừa Bảy Mẫu\ncategory: destination",
+        "conversation_history": [],
+        "metadata": {
+          "question_type": "complex",
+          "seed_document_id": 1872,
+          "topic": "Khách sạn và Du lịch"
+        },
+        "agent_answer": "Rừng dừa Bảy Mẫu nằm tại thôn Thanh Nhứt, Thanh Tam, Vạn Lăng, Thành phố Hội An, Quảng Nam. Những đặc điểm nổi bật làm cho nơi đây trở thành một điểm đến thú vị cho du khách là:\n\n- Du khách sẽ được tham quan khu rừng hoàn toàn trên thuyền theo phong cách miền Tây Nam Bộ, nhưng khác biệt ở chỗ người dân không sử dụng thuyền thông dụng mà sử dụng thuyền thúng.\n- Thời điểm lý tưởng để thăm quan là vào tháng 08 Âm lịch, khi đó du khách có thể chiêm ngưỡng những bụi dừa nước đang vào mùa chín và thưởng thức món cơm dừa thơm ngon.\n- Nên tránh đi vào tháng 11 và tháng 12 vì những cơn mưa có thể làm du khách bị mắc kẹt và không thể tận hưởng chuyến hành trình.",
+        "correctness": false,
+        "correctness_reason": "The agent provided additional information about the best time to visit and what to avoid, which was not part of the reference answer. The reference answer focused solely on the location and a specific characteristic of the experience."
+      },
+      {
+        "id": "353d074c-0a6e-4ed6-a1e1-00f546b98e44",
+        "question": "Bạn có thể cho tôi biết vị trí chính xác của nhà trưng bày Mỹ Sơn và khoảng cách của nó so với khu di tích Mỹ Sơn không?",
+        "reference_answer": "Nhà trưng bày Mỹ Sơn nằm cạnh suối khe Thẻ, cách khu di tích Mỹ Sơn khoảng 02 km về hướng Tây Bắc, Huyện Duy Xuyên, Quảng Nam.",
+        "reference_context": "Document 2138: content: có cách trưng bày rất mới mẽ, tuy ít hiện vật bên trong nhưng lại cung cấp cho du khách rất nhiều thông tin. Với cách trưng bày bố trí rất khoa học qua các panô, mô hình minh họa, nội dung và hình ảnh cô đọng và cuốn hút, quý khách dễ dàng tiếp cận tìm hiểu và có một cảm thụ tổng quan về quá trình phát triển cũng như giá trị kiến trúc nghệ thuật đặc sắc của khu di tích quan trọng này. Nhà trưng bày Mỹ Sơn Địa chỉ: nằm cạnh suối khe Thẻ, cách khu di tích Mỹ Sơn khoảng 02 km về hướng Tây Bắc, Huyện Duy Xuyên, Quảng Nam.\ntitle: Nhà trưng bày Mỹ Sơn\ncategory: entertainment",
+        "conversation_history": [],
+        "metadata": {
+          "question_type": "complex",
+          "seed_document_id": 2138,
+          "topic": "Khách sạn và Du lịch"
+        },
+        "agent_answer": "Nhà trưng bày Mỹ Sơn nằm cạnh suối khe Thẻ, cách khu di tích Mỹ Sơn khoảng 02 km về hướng Tây Bắc, Huyện Duy Xuyên, Quảng Nam.",
+        "correctness": true,
+        "correctness_reason": NaN
+      },
+      {
+        "id": "7d28843e-95ec-4f41-a821-09469560bafc",
+        "question": "Bạn có thể cho biết Tháp Chiên Đàn nằm ở đâu và có những đặc điểm nổi bật nào, trong khi cũng đề cập đến các địa điểm ẩm thực gần đó như Nhà hàng Memory Lounge không?",
+        "reference_answer": "Tháp Chiên Đàn nằm ở Thành phố Tam Kỳ, Quảng Nam. Chỉ có tháp ở giữa giữ được khá nguyên vẹn, còn tháp phía bắc và phía nam đã mất các tầng phía trên. Ba ngôi tháp có hình dạng giống nhau, đế tháp hình vuông, mái tháp là các tầng thu nhỏ dần lên trên.",
+        "reference_context": "Document 2129: content: Tháp Chiên Đàn. Loai: diem den. Vai tro lap lich: tham quan. Khu vuc: Đà Nẵng. Dia chi: Thành phố Tam Kỳ, Quảng Nam. Loai hinh: Du lịch văn hóa. Mo ta: Chỉ có tháp ở giữa giữ được khá nguyên vẹn, còn tháp phía bắc và phía nam đã mất các tầng phía trên. Ba ngôi tháp có hình dạng giống nhau, đế tháp hình vuông, mái tháp là các tầng thu nhỏ dần lên trên. Chùa, đình, đền, tháp, nhà thờ, lăng mộ Chỉ có tháp ở giữa giữ được khá nguyên vẹn, còn tháp phía bắc và phía nam đã mất các tầng phía trên.\ntitle: Tháp Chiên Đàn\ncategory: destination",
+        "conversation_history": [],
+        "metadata": {
+          "question_type": "distracting element",
+          "seed_document_id": 2129,
+          "distracting_context": "content: Nhà hàng Memory Lounge. Loai: am thuc. Vai tro lap lich: an uong. Khu vuc: Hải Châu, Đà Nẵng. Dia chi: 7 Bạch Đằng, Quận Hải Châu, Thành phố Đà Nẵng. Intent tags: am_thuc, thien_nhien. Mo ta: Nhà hàng với thiết kế hình chiếc lá độc đáo mà vô cùng đặc biệt là địa điểm du khách không nên bỏ qua khi đến tham quan thành phố biển xinh đẹp này.\ntitle: Nhà hàng Memory Lounge\ncategory: restaurant",
+          "topic": "Khách sạn và Du lịch"
+        },
+        "agent_answer": "Tháp Chiên Đàn nằm ở Thành phố Tam Kỳ, Quảng Nam. Đặc điểm nổi bật của tháp là chỉ có tháp ở giữa giữ được khá nguyên vẹn, còn tháp phía bắc và phía nam đã mất các tầng phía trên. Ba ngôi tháp có hình dạng giống nhau, đế tháp hình vuông, mái tháp là các tầng thu nhỏ dần lên trên. Trên thân tháp không có hoa văn trang trí, các cột ốp tường nhô ra vừa phải. Mỗi tháp có 3 cửa giả và một cửa ra vào, phía trên cửa giả có vòm uốn cong nhọn hình lá đề.\n\nNhà hàng Memory Lounge nằm ở 7 Bạch Đằng, Quận Hải Châu, Thành phố Đà Nẵng, cách Tháp Chiên Đàn một khoảng xa. Nhà hàng này nổi bật với thiết kế hình chiếc lá độc đáo và phục vụ những món ăn mang phong cách châu u cao cấp được làm từ những nguyên liệu thượng hạng.",
+        "correctness": false,
+        "correctness_reason": "The agent provided excessive information about Nhà hàng Memory Lounge, which was not requested in the reference answer."
+      },
+      {
+        "id": "15c78165-b583-4e3c-8bde-652a09366c03",
+        "question": "Khách sạn Nesta có nằm gần Boo Hostel ở Sơn Trà, Đà Nẵng không?",
+        "reference_answer": "Khách sạn Nesta nằm tại Lô 06 -7 – H2 đường Phạm Văn Đồng, Quận Sơn Trà, Thành phố Đà Nẵng.",
+        "reference_context": "Document 877: content: Khách sạn Nesta. Loai: luu tru. Vai tro lap lich: luu tru. Khu vuc: Sơn Trà, Đà Nẵng. Dia chi: Lô 06 -7 – H2 đường Phạm Văn Đồng, Quận Sơn Trà, Thành phố Đà Nẵng. Mo ta: Khách sạn Nesta Khách sạn Địa chỉ: Lô 06 -7 – H2 đường Phạm Văn Đồng, Quận Sơn Trà, Thành phố Đà Nẵng Số phòng: 75 Điện thoại cố định: 0236 0236 3954 333 Email: infodn@nestahotel.com.vn Website: http://nestahotel.com.vn.\ntitle: Khách sạn Nesta\ncategory: accommodation",
+        "conversation_history": [],
+        "metadata": {
+          "question_type": "distracting element",
+          "seed_document_id": 877,
+          "distracting_context": "content: Boo Hostel. Loai: luu tru. Vai tro lap lich: luu tru. Khu vuc: Sơn Trà, Đà Nẵng. Dia chi: 38 Thạch Lam, An Hải, Quận Sơn Trà, Thành phố Đà Nẵng. Intent tags: thien_nhien. Mo ta: Boo Hostel Địa chỉ: 38 Thạch Lam, An Hải, Quận Sơn Trà, Thành phố Đà Nẵng.\ntitle: Boo Hostel\ncategory: accommodation",
+          "topic": "Khách sạn và Du lịch"
+        },
+        "agent_answer": "Khách sạn Nesta và Boo Hostel đều nằm ở khu vực Sơn Trà, Đà Nẵng. Tuy nhiên, không có thông tin cụ thể về khoảng cách giữa hai địa điểm này.",
+        "correctness": false,
+        "correctness_reason": "The agent did not provide specific information about the location of Khách sạn Nesta, which was included in the reference answer."
+      },
+      {
+        "id": "5478a679-39b0-4a7a-9edd-2485f0c9fe4e",
+        "question": "Naman Retreat có những tiện ích gì cho trẻ em so với những tiện ích tại khách sạn White Snow ở Đà Nẵng?",
+        "reference_answer": "Resort có khu vui chơi hỗ trợ cho các bé như vẽ tranh, tô màu, và có hỗ trợ baby sitter với giá dao động khoảng 250.000 vnđ/ giờ.",
+        "reference_context": "Document 521: content: phút/ khách khi đặt phòng nghỉ tại đây. Hồ bơi: Resort có 2 hồ bơi lớn ngoài trời cho người lớn và trẻ em. + Babylon Pool: (L)32m x (W)10m; (D)0,5m-1,7m + Main Pool: (L)44m x (W)13m; (D) 0,5m-1,7m Kids club: Resort có khu vui chơi hỗ trợ cho các bé như vẽ tranh, tô màu,... Đặc biệt, resort có hỗ trợ baby sitter với giá dao động khoảng 250.000 vnđ/ giờ ( thời gian: 8h - 22h). Di chuyển nội khu (bên trong resort): Naman Retreat có hỗ trợ xe buggy (xe điện) trong khu resort miễn phí, để sử dụng xe Quý khách vui lòng liên hệ với lễ tân trước 5 phút....\ntitle: Khách sạn nghỉ dưỡng Naman Retreat\ncategory: accommodation",
+        "conversation_history": [],
+        "metadata": {
+          "question_type": "distracting element",
+          "seed_document_id": 521,
+          "distracting_context": "content: Khách sạn White Snow. Loai: luu tru. Vai tro lap lich: luu tru. Khu vuc: Hải Châu, Đà Nẵng. Dia chi: 97-99 Nguyễn Văn Linh, Quận Hải Châu, Thành phố Đà Nẵng. Intent tags: thien_nhien. Mo ta: Khách sạn White Snow có vị trí thuận lợi như tọa lạc ở vị trí chỉ cách trung tâm thành phố 0,3km, cách sân bay chỉ 1km và cách sân ga khoảng 2km. Khách sạn nằm tại đầu đường Nguyễn Văn Linh, một trong những con đường đẹp nhất Đà Nẵng nối dài qua sông Hàn và cầu Rồng, 2 điểm nhấn du lịch của thành phố Đà Nẵng.\ntitle: Khách sạn White Snow\ncategory: accommodation",
+          "topic": "Khách sạn và Du lịch"
+        },
+        "agent_answer": "Naman Retreat có khu vui chơi hỗ trợ cho các bé như vẽ tranh, tô màu và đặc biệt có hỗ trợ baby sitter với giá dao động khoảng 250.000 vnđ/ giờ (thời gian: 8h - 22h). Trong khi đó, không có thông tin cụ thể về tiện ích cho trẻ em tại khách sạn White Snow.",
+        "correctness": true,
+        "correctness_reason": NaN
+      },
+      {
+        "id": "d0df7104-5338-44c3-9258-e2456f574ea5",
+        "question": "Chào bạn, trong hành trình đến Đà Nẵng, tôi đang tìm kiếm một khách sạn nghỉ dưỡng gần các điểm tham quan nổi tiếng như Hội quán Chi Hội Triều Châu và Trần Dương House. Bạn có biết khách sạn Hội An Ancient House Village Resort & Spa cách trung tâm thành phố bao xa không?",
+        "reference_answer": "Khách sạn cách trung tâm thành phố 2 km.",
+        "reference_context": "Document 1751: content: thành phố 2 km và cách sân bay 33 km, khách sạn 4 sao này thu hút được rất nhiều du khách mỗi năm. Với những điểm du lịch chính của thành phố như Nga, Trần Dương House, Hội quán Chi Hội Triều Châu Trung Quốc khá gần, khách tham quan khi đến khách sạn đều rất hài lòng với vị trí này của khách sạn. Thiết bị và dịch vụ cung cấp bởi Hội An Ancient House Village Resort & Spa bảo đảm kì nghỉ dễ chịu cho du khách.\ntitle: Khách sạn nghỉ dưỡng Nhà Cổ\ncategory: accommodation\n\nDocument 1750: content: thành phố 2 km và cách sân bay 33 km, khách sạn 4 sao này thu hút được rất nhiều du khách mỗi năm. Là nơi nghỉ ngơi chất lượng trong mua sắm, ngắm cảnh, văn hóa của Hội An, Hội An Ancient House Village Resort & Spa nổi tiếng phục vụ cho cả khách nghỉ dưỡng và các doanh nhân. Với vị trí cách trung tâm thành phố 2 km và cách sân bay 33 km, khách sạn 4 sao này thu hút được rất nhiều du khách mỗi năm.\ntitle: Khách sạn nghỉ dưỡng Nhà Cổ\ncategory: accommodation",
+        "conversation_history": [],
+        "metadata": {
+          "question_type": "situational",
+          "seed_document_id": 1751,
+          "situational_context": "Trong hành trình đến Đà Nẵng, một du khách đang tìm kiếm một khách sạn nghỉ dưỡng gần các điểm tham quan nổi tiếng như Hội quán Chi Hội Triều Châu và Trần Dương House.",
+          "topic": "Khách sạn và Du lịch"
+        },
+        "agent_answer": "Khách sạn Hội An Ancient House Village Resort & Spa cách trung tâm thành phố 2 km.",
+        "correctness": true,
+        "correctness_reason": NaN
+      },
+      {
+        "id": "b215e4a0-3ab6-4cd0-90f5-e14a5c652183",
+        "question": "Chào bạn, khi tôi đang lên kế hoạch cho chuyến đi đến Đà Nẵng, tôi muốn biết Danang Transfer cung cấp những loại xe du lịch nào để thuận tiện cho việc di chuyển giữa các địa điểm tham quan?",
+        "reference_answer": "Danang Transfer cung cấp đội xe du lịch đời mới từ 2017 trở lên, bao gồm Kia Cerato, Honda Civic, City, Toyota Vios, Altis, Inova, Fortuner, Ford Transit, Toyota Hiace.",
+        "reference_context": "Document 1463: content: đón khách ở khách sạn và khu du lịch của công ty, hay cho thuê xe du lịch cho các đoàn khi đến đây. Với những ưu đãi từ Danang Transfer Giá rẻ nhất Đà Nẵng : Rẻ hơn 40% so với taxi, rẻ hơn 25% so với các đơn vị cho thuê xe du lịch khác Uber/ Grab… Đội xe du lịch đời mới từ 2017 trở lên ( Kia Cerato , Honda Civic, City, Toyota Vios, Altis, Inova, Fortuner, Ford Transit, Toyota Hiace…) Tài xế chuyên nghiệp , phục vụ nhiệt tình .Lái xe được trang bị kiến thức du lịch, kinh nghiệm nghề nghiêp sẽ mang đến c....\ntitle: Thuê xe du lịch Đà Nẵng ( Danang Transfer)\ncategory: transport",
+        "conversation_history": [],
+        "metadata": {
+          "question_type": "situational",
+          "seed_document_id": 1463,
+          "situational_context": "Khi lên kế hoạch cho chuyến đi đến Đà Nẵng, bạn đang tìm kiếm những địa điểm tham quan và lịch trình thú vị nhất cho hành trình khám phá của mình.",
+          "topic": "Khách sạn và Du lịch"
+        },
+        "agent_answer": "Danang Transfer cung cấp đội xe du lịch đời mới từ 2017 trở lên, bao gồm các loại xe như Kia Cerato, Honda Civic, City, Toyota Vios, Altis, Inova, Fortuner, Ford Transit, Toyota Hiace.",
+        "correctness": true,
+        "correctness_reason": NaN
+      },
+      {
+        "id": "2abe7e42-2c0a-46c1-9e4a-f2ea52ec5a05",
+        "question": "Chào bạn, tôi là một du khách đang lên kế hoạch cho kỳ nghỉ ở Đà Nẵng và muốn tìm hiểu về những khách sạn gần bãi biển. Bạn có thể cho tôi biết Stella Maris Beach Hotel Da Nang nằm ở đâu không?",
+        "reference_answer": "Stella Maris Beach Hotel Da Nang có địa chỉ tại 03 Võ Văn Kiệt, An Hải, Quận Sơn Trà, Thành phố Đà Nẵng.",
+        "reference_context": "Document 1074: content: Stella Maris Beach Hotel Da Nang. Loai: luu tru. Vai tro lap lich: luu tru. Khu vuc: Sơn Trà, Đà Nẵng. Dia chi: 03 Võ Văn Kiệt, An Hải, Quận Sơn Trà, Thành phố Đà Nẵng. Intent tags: bien, thien_nhien. Mo ta: Stella Maris Beach Hotel Da Nang Địa chỉ: 03 Võ Văn Kiệt, An Hải, Quận Sơn Trà, Thành phố Đà Nẵng.\ntitle: Stella Maris Beach Hotel Da Nang\ncategory: accommodation",
+        "conversation_history": [],
+        "metadata": {
+          "question_type": "situational",
+          "seed_document_id": 1074,
+          "situational_context": "Một du khách đang lên kế hoạch cho kỳ nghỉ ở Đà Nẵng và tìm kiếm những khách sạn gần bãi biển để tận hưởng kỳ nghỉ dưỡng của mình.",
+          "topic": "Khách sạn và Du lịch"
+        },
+        "agent_answer": "Stella Maris Beach Hotel Da Nang nằm tại địa chỉ: 03 Võ Văn Kiệt, An Hải, Quận Sơn Trà, Thành phố Đà Nẵng.",
+        "correctness": true,
+        "correctness_reason": NaN
+      },
+      {
+        "id": "b60f29b2-44e1-47c6-9347-c4a5012cca6e",
+        "question": "Nhà hàng Madame Lân Đà Nẵng nằm ở đâu và không gian của nhà hàng như thế nào?",
+        "reference_answer": "Nhà hàng Madame Lân Đà Nẵng có địa chỉ tại 04 Bạch Đằng, Thành phố Đà Nẵng và được xây dựng với kiến trúc cổ kính, không gian ấm cúng, thân thiện bao gồm những gian nhà ngói đỏ liền kề nhấp nhô.",
+        "reference_context": "Document 1443: content: Nhà Hàng Madame Lân Đà Nẵng. Loai: am thuc. Vai tro lap lich: an uong. Khu vuc: Đà Nẵng. Dia chi: 04 Bạch Đằng, Thành phố Đà Nẵng. Intent tags: am_thuc. Mo ta: Nhà hàng Madame Lân đươc xây dựng với kiến trúc cổ kính, không gian ấm cúng, thân thiện bao gồm những gian nhà ngói đỏ liền kề nhấp nhô. Những mái hiên với ánh đèn treo cao rực rỡ, đan xen lẫn nhau tạo cho người ta cảm giác giống như một con phố cổ trong ký ức xưa. Nơi đây phù hợp với những cuộc gặp gỡ gia đình, bạn bè.\ntitle: Nhà Hàng Madame Lân Đà Nẵng\ncategory: restaurant",
+        "conversation_history": [],
+        "metadata": {
+          "question_type": "double",
+          "original_questions": [
+            {
+              "question": "Nhà hàng Madame Lân Đà Nẵng nằm ở đâu?",
+              "answer": "Nhà hàng Madame Lân Đà Nẵng có địa chỉ tại 04 Bạch Đằng, Thành phố Đà Nẵng."
+            },
+            {
+              "question": "Không gian của nhà hàng Madame Lân như thế nào?",
+              "answer": "Nhà hàng Madame Lân được xây dựng với kiến trúc cổ kính, không gian ấm cúng, thân thiện bao gồm những gian nhà ngói đỏ liền kề nhấp nhô."
+            }
+          ],
+          "seed_document_id": 1443,
+          "topic": "Nhà hàng Đà Nẵng"
+        },
+        "agent_answer": "Nhà hàng Madame Lân Đà Nẵng nằm ở địa chỉ 04 Bạch Đằng, Thành phố Đà Nẵng. Không gian của nhà hàng được xây dựng với kiến trúc cổ kính, ấm cúng, thân thiện bao gồm những gian nhà ngói đỏ liền kề nhấp nhô. Những mái hiên với ánh đèn treo cao rực rỡ, đan xen lẫn nhau tạo cho người ta cảm giác giống như một con phố cổ trong ký ức xưa. Nơi đây phù hợp với những cuộc gặp gỡ gia đình, bạn bè.",
+        "correctness": false,
+        "correctness_reason": "The agent provided additional details about the restaurant's atmosphere and suitability for gatherings, which were not included in the reference answer."
+      },
+      {
+        "id": "67e831ac-9e19-4831-abc6-f22d37f61535",
+        "question": "Địa chỉ của Dac San Hoi An là gì và nó thuộc loại hình nào?",
+        "reference_answer": "Địa chỉ của Dac San Hoi An là 137, Phan Châu Trinh, Hoi An Old Town, Phường Hội An, Thành phố Đà Nẵng, 64000, Việt Nam và nó thuộc loại hình nhà hàng.",
+        "reference_context": "Document 1924: content: An, 137, Phan Châu Trinh, Hoi An Old Town, Phường Hội An, Thành phố Đà Nẵng, 64000, Việt Nam. phan loai ban do: /restaurant. tim thay tu truy van: restaurant in Hoi An, Quang Nam Dac San Hoi An - Dac San Hoi An, 137, Phan Châu Trinh, Hoi An Old Town, Phường Hội An, Thành phố Đà Nẵng, 64000, Việt Nam.\ntitle: Dac San Hoi An\ncategory: restaurant",
+        "conversation_history": [],
+        "metadata": {
+          "question_type": "double",
+          "original_questions": [
+            {
+              "question": "Địa chỉ của Dac San Hoi An là gì?",
+              "answer": "Địa chỉ của Dac San Hoi An là 137, Phan Châu Trinh, Hoi An Old Town, Phường Hội An, Thành phố Đà Nẵng, 64000, Việt Nam."
+            },
+            {
+              "question": "Dac San Hoi An thuộc loại hình nào?",
+              "answer": "Dac San Hoi An thuộc loại hình nhà hàng."
+            }
+          ],
+          "seed_document_id": 1924,
+          "topic": "Nhà hàng Đà Nẵng"
+        },
+        "agent_answer": "Địa chỉ của Dac San Hoi An là: Dac San Hoi An, 137, Phan Châu Trinh, Hoi An Old Town, Phường Hội An, Thành phố Đà Nẵng, 64000, Việt Nam. Nó thuộc loại hình ẩm thực.",
+        "correctness": false,
+        "correctness_reason": "The agent stated that it belongs to the type of ẩm thực (cuisine), but should have said it is a nhà hàng (restaurant)."
+      },
+      {
+        "id": "f87ff4a7-8f50-4ec7-8722-5b0d66bc4367",
+        "question": "Khách sạn Biển Vàng nằm ở đâu và có vị trí gần bãi biển nào nổi tiếng?",
+        "reference_answer": "Khách sạn Biển Vàng tọa lạc tại 118 Phạm Văn Đồng, Sơn Trà, Quận Sơn Trà, Thành phố Đà Nẵng và nằm gần Bãi Biển Mỹ Khê, một trong 6 bãi biển được tạp chí Forbes bầu chọn đẹp nhất hành tinh.",
+        "reference_context": "Document 677: content: Khách sạn Biển Vàng. Loai: luu tru. Vai tro lap lich: luu tru. Khu vuc: Sơn Trà, Đà Nẵng. Dia chi: 118 Phạm Văn Đồng, Sơn Trà, Quận Sơn Trà, Thành phố Đà Nẵng. Intent tags: bien, thien_nhien. Mo ta: Tọa lạc tại khu vực Bãi Biển Mỹ Khê, Đà Nẵng - 1 trong 6 bãi biển được tạp chí Forbes bầu chọn đẹp nhất hành tinh - là lựa chọn nổi tiếng dành cho khách du lịch. Tọa lạc tại khu vực Bãi Biển Mỹ Khê, Đà Nẵng - 1 trong 6 bãi biển được tạp chí Forbes bầu chọn đẹp nhất hành tinh - là lựa chọn nổi tiếng dành cho khách du lịch.\ntitle: Khách sạn Biển Vàng\ncategory: accommodation",
+        "conversation_history": [],
+        "metadata": {
+          "question_type": "double",
+          "original_questions": [
+            {
+              "question": "Khách sạn Biển Vàng nằm ở đâu?",
+              "answer": "Khách sạn Biển Vàng tọa lạc tại 118 Phạm Văn Đồng, Sơn Trà, Quận Sơn Trà, Thành phố Đà Nẵng."
+            },
+            {
+              "question": "Khách sạn Biển Vàng có vị trí gần bãi biển nào nổi tiếng?",
+              "answer": "Khách sạn Biển Vàng nằm gần Bãi Biển Mỹ Khê, một trong 6 bãi biển được tạp chí Forbes bầu chọn đẹp nhất hành tinh."
+            }
+          ],
+          "seed_document_id": 677,
+          "topic": "Khách sạn và Du lịch"
+        },
+        "agent_answer": "Khách sạn Biển Vàng nằm ở địa chỉ 118 Phạm Văn Đồng, Sơn Trà, Quận Sơn Trà, Thành phố Đà Nẵng. Khách sạn tọa lạc tại khu vực Bãi Biển Mỹ Khê, một trong 6 bãi biển được tạp chí Forbes bầu chọn đẹp nhất hành tinh.",
+        "correctness": true,
+        "correctness_reason": NaN
+      },
+      {
+        "id": "f9d0bea8-9901-4dab-abbd-c2bf7ebda3d4",
+        "question": "Nơi này có những gì đặc biệt?",
+        "reference_answer": "Khách sạn Đà Nẵng Riverside nằm ở A30 Trần Hưng Đạo, Sơn Trà, Quận Sơn Trà, Thành phố Đà Nẵng. Khách sạn cách sân bay quốc tế Đà Nẵng 02km, đi bộ ra biển Mỹ Khê chỉ 05 phút và cách phố cổ Hội An 20km.",
+        "reference_context": "Document 1029: content: Khách sạn Đà Nẵng Riverside. Loai: luu tru. Vai tro lap lich: luu tru. Khu vuc: Sơn Trà, Đà Nẵng. Dia chi: A30 Trần Hưng Đạo, Sơn Trà, Quận Sơn Trà, Thành phố Đà Nẵng. Intent tags: bien, thien_nhien. Mo ta: Khách sạn Danang Riverside nằm ở vị trí trung tâm thành phố Đà Nẵng, tọa lạc bên đầu cầu Rồng, đối diện sông Hàn thơ mộng, xinh đẹp, cách sân bay quốc tế Đà Nẵng 02km, đi bộ ra biển Mỹ Khê chỉ 05 phút và đặc biệt là chỉ cách phố cổ Hội An 20km.\ntitle: Khách sạn Đà Nẵng Riverside\ncategory: accommodation",
+        "conversation_history": [
+          {
+            "role": "user",
+            "content": "Tôi muốn biết khách sạn Đà Nẵng Riverside nằm ở đâu và cách những địa điểm nổi bật nào."
+          },
+          {
+            "role": "assistant",
+            "content": "How can I help you with that?"
+          }
+        ],
+        "metadata": {
+          "question_type": "conversational",
+          "seed_document_id": 1029,
+          "topic": "Khách sạn và Du lịch"
+        },
+        "agent_answer": "Khách sạn Đà Nẵng Riverside có những điểm đặc biệt sau:\n\n- Nằm ở vị trí trung tâm thành phố Đà Nẵng, bên đầu cầu Rồng, đối diện sông Hàn thơ mộng.\n- Cách sân bay quốc tế Đà Nẵng 02km.\n- Đi bộ ra biển Mỹ Khê chỉ 05 phút.\n- Cách phố cổ Hội An 20km.\n- Gần các trung tâm mua sắm lớn như Vincom, Lotte, Big C, tiện lợi cho việc mua sắm.\n- Đội ngũ nhân viên phục vụ nhiệt tình, chu đáo và chuyên nghiệp.",
+        "correctness": false,
+        "correctness_reason": "The agent provided general information about the hotel's special features but did not specify the exact address of the Đà Nẵng Riverside hotel, which is required in the reference answer."
+      },
+      {
+        "id": "61a309c5-bc0a-4bd1-94ab-3e5975b37fef",
+        "question": "Nơi nào vậy?",
+        "reference_answer": "Khách sạn Nhật Hạ II nằm tại 196 Nguyễn Chí Thanh, Hải Châu, Quận Hải Châu, Thành phố Đà Nẵng.",
+        "reference_context": "Document 144: content: Khách sạn Nhật Hạ II. Loai: luu tru. Vai tro lap lich: luu tru. Khu vuc: Hải Châu, Đà Nẵng. Dia chi: 196 Nguyễn Chí Thanh, Hải Châu, Quận Hải Châu, Thành phố Đà Nẵng. Mo ta: Khách sạn Nhật Hạ II Khách sạn Địa chỉ: 196 Nguyễn Chí Thanh, Hải Châu, Quận Hải Châu, Thành phố Đà Nẵng Điện thoại cố định: 0236 0236 3519 688 Email: nhatha2196@gmail.com.\ntitle: Khách sạn Nhật Hạ II\ncategory: accommodation",
+        "conversation_history": [
+          {
+            "role": "user",
+            "content": "Tôi đang tìm kiếm địa điểm của khách sạn Nhật Hạ II."
+          },
+          {
+            "role": "assistant",
+            "content": "How can I help you with that?"
+          }
+        ],
+        "metadata": {
+          "question_type": "conversational",
+          "seed_document_id": 144,
+          "topic": "Khách sạn và Du lịch"
+        },
+        "agent_answer": "Khách sạn Nhật Hạ II có địa chỉ tại 196 Nguyễn Chí Thanh, Hải Châu, Quận Hải Châu, Thành phố Đà Nẵng.",
+        "correctness": true,
+        "correctness_reason": NaN
+      },
+      {
+        "id": "5c9fcfb3-1101-4b49-9321-274645251fd0",
+        "question": "Nơi nào là đúng?",
+        "reference_answer": "Khách sạn Salem Riverside Đà Nẵng tọa lạc tại 323 Trần Hưng Đạo, Quận Sơn Trà, Thành phố Đà Nẵng.",
+        "reference_context": "Document 923: content: Khách sạn Salem Riverside Đà Nẵng. Loai: luu tru. Vai tro lap lich: luu tru. Khu vuc: Sơn Trà, Đà Nẵng. Dia chi: 323 Trần Hưng Đạo, Quận Sơn Trà, Thành phố Đà Nẵng. Intent tags: thien_nhien. Mo ta: Như cánh hoa Salem với sức sống mãnh liệt, bền bỉ vươn lên với khát vọng được khẳng định chính mình. Khách sạn Salem Riverside tọa lạc bên bờ Đông cầu sông Hàn, tại vị trí giao thoa giữa sông biển, trời mây. Như cánh hoa Salem với sức sống mãnh liệt, bền bỉ vươn lên với khát vọng được khẳng định chính mình.\ntitle: Khách sạn Salem Riverside Đà Nẵng\ncategory: accommodation",
+        "conversation_history": [
+          {
+            "role": "user",
+            "content": "Tôi muốn biết vị trí của khách sạn Salem Riverside Đà Nẵng."
+          },
+          {
+            "role": "assistant",
+            "content": "How can I help you with that?"
+          }
+        ],
+        "metadata": {
+          "question_type": "conversational",
+          "seed_document_id": 923,
+          "topic": "Khách sạn và Du lịch"
+        },
+        "agent_answer": "Khách sạn Salem Riverside Đà Nẵng tọa lạc tại địa chỉ: 323 Trần Hưng Đạo, Quận Sơn Trà, Thành phố Đà Nẵng.",
+        "correctness": true,
+        "correctness_reason": NaN
+      }
+    ]
+  }
+}

@@ -182,6 +182,9 @@ def should_retry_itinerary(validation: dict[str, Any], retry_attempted: bool) ->
     return any(issue in retryable for issue in validation.get("issues", []))
 
 
+_TRANSIT_LEG_LABELS = {"Departure", "Return to hotel"}
+
+
 def _check_distances(
     route_plan: list[dict[str, Any]],
     total_days: int,
@@ -189,7 +192,9 @@ def _check_distances(
     leg_distances = [
         float(leg["distance_km"])
         for leg in route_plan
-        if isinstance(leg.get("distance_km"), (int, float)) and float(leg["distance_km"]) > 0
+        if isinstance(leg.get("distance_km"), (int, float))
+        and float(leg["distance_km"]) > 0
+        and leg.get("leg_label") not in _TRANSIT_LEG_LABELS
     ]
     issues: list[str] = []
     if len([d for d in leg_distances if d > 18.0]) > max(1, total_days - 1):

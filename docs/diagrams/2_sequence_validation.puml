@@ -1,0 +1,44 @@
+@startuml sequence_validation_simplified
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontSize 12
+skinparam sequenceArrowThickness 1.5
+skinparam ParticipantBorderColor #555
+skinparam SequenceLifeLineBorderColor #AAAAAA
+skinparam NoteBackgroundColor #FFFDE7
+skinparam NoteBorderColor #F9A825
+
+participant "Planning Agent\n[A3]" as A3 #FFF9C4
+participant "Validator Agent\n[A4]" as A4 #FFCCBC
+participant "OpenAI API" as OpenAI #FCE4EC
+participant "Response Agent\n[A5]" as A5 #E1BEE7
+
+A3 --> A4 : draft_plan\n{ plan, route_plan,\n  places_for_validation }
+
+activate A4
+
+A4 -> OpenAI : validate itinerary\nwith user constraints
+OpenAI --> A4 : validation result\n{ passed, issues, reason }
+
+A4 -> A4 : check route distance\nand schedule feasibility
+
+alt plan is valid
+A4 --> A5 : validated_plan\n{ passed: true,\n  retried: false }
+
+else plan has issues and retry is available
+A4 -> A4 : build retry constraints\nnearby places, shorter routes
+
+A4 --> A3 : request re-plan\n{ retry_query, strict_mode }
+A3 --> A4 : revised_plan\n{ plan, route_plan }
+
+A4 -> OpenAI : re-validate revised plan
+OpenAI --> A4 : validation result
+
+A4 --> A5 : validated_plan\n{ passed: true,\n  retried: true }
+
+else plan still has issues
+A4 --> A5 : validation_result\n{ passed: false,\n  issues: [...],\n  retried: true }
+
+deactivate A4
+
+@enduml

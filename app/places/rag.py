@@ -52,7 +52,6 @@ class RetrievalArtifacts:
     places: List[dict]
     trace: List[str]
     local_candidates_considered: int
-    weather: Optional[dict] = None
     guide: str = ""
     transport: Optional[List[str]] = None
     recommended_hotel: Optional[dict] = None
@@ -101,7 +100,6 @@ def retrieve_trip_artifacts(
     else:
         trace.append("db_only_local_limited_results")
     places = local_ranked[:top_k]
-    weather = None
     guide = ""
 
     if category:
@@ -251,16 +249,14 @@ def retrieve_trip_artifacts(
                 limit=max(top_k, required_total),
             )
 
-    transport = _transport_suggestions_from_weather(weather)
     map_selection = {"recommended_hotel": None, "mobility_plan": None}
 
     return RetrievalArtifacts(
         places=places,
         trace=trace,
         local_candidates_considered=len(local_ranked),
-        weather=weather,
         guide=guide,
-        transport=transport,
+        transport=None,
         recommended_hotel=map_selection.get("recommended_hotel"),
         mobility_plan=map_selection.get("mobility_plan"),
     )
@@ -269,7 +265,6 @@ def retrieve_trip_artifacts(
 def build_context_payload(
     query: str,
     places: List[dict],
-    weather: dict | None = None,
     transport: List[str] | None = None,
     recommended_hotel: dict | None = None,
     mobility_plan: dict | None = None,
@@ -278,7 +273,6 @@ def build_context_payload(
     return _build_augmented_context(
         places=places,
         query=query,
-        weather=weather,
         transport=transport,
         recommended_hotel=recommended_hotel,
         mobility_plan=mobility_plan,
@@ -378,34 +372,9 @@ def build_coordinator_output(query: str, itinerary: str, transport: List[str] | 
     )
 
 
-def _transport_suggestions_from_weather(weather: dict | None) -> List[str] | None:
-    if not weather:
-        return None
-    desc = str(weather.get("description") or "").lower()
-    windy = float(weather.get("wind_kmh") or 0) >= 25
-    rainy = "rain" in desc or "storm" in desc or "mưa" in desc or "giông" in desc
-
-    if rainy:
-        tips = [
-            "Nên đi Grab/taxi hoặc ô tô (tránh đi bộ xa khi trời mưa).",
-            "Nếu đi xe máy: mặc áo mưa tốt và bọc điện thoại chống nước.",
-        ]
-        if windy:
-            tips.append("Gió mạnh: hạn chế đi xe máy và ra biển, ưu tiên đi ô tô.")
-        return tips
-
-    if windy:
-        return [
-            "Trời có gió: nên đi Grab/taxi cho đoạn xa; nếu đi xe máy hãy chạy chậm và đội mũ bảo hiểm đầy đủ.",
-        ]
-
-    return ["Thời tiết tốt: đi bộ cho đoạn ngắn, xe máy/Grab cho đoạn dài."]
-
-
 def _build_augmented_context(
     places: List[dict],
     query: str,
-    weather: dict | None,
     transport: List[str] | None,
     recommended_hotel: dict | None,
     mobility_plan: dict | None,
@@ -417,9 +386,6 @@ def _build_augmented_context(
     if vector_chunk_context:
         parts.append(vector_chunk_context)
 
-    if weather:
-        w_line = f"{weather.get('location','')}: {weather.get('description','')}, {weather.get('temp_c','?')}°C"
-        parts.append("## Weather (Open-Meteo)\n" + w_line.strip())
     if guide:
         parts.append("## Travel guide (Wikivoyage)\n" + guide)
 

@@ -1,0 +1,51 @@
+@startuml sequence_intake
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontSize 12
+skinparam sequenceArrowThickness 1.5
+skinparam ParticipantBorderColor #555
+skinparam SequenceLifeLineBorderColor #AAAAAA
+skinparam NoteBackgroundColor #FFFDE7
+skinparam NoteBorderColor #F9A825
+
+actor "User" as User
+
+participant "API Routes" as API #F5F5F5
+participant "Intake Agent\n[A1]" as A1 #BBDEFB
+participant "OpenAI API" as OpenAI #FCE4EC
+participant "Retrieval Agent\n[A2]" as A2 #C8E6C9
+
+User -> API : POST /api/chat\n{ message, options }
+API -> A1 : invoke(state)
+
+activate A1
+
+A1 -> A1 : normalize user message
+
+alt empty message
+A1 --> API : follow_up_questions
+API --> User : ask user to provide trip request
+
+else message exists
+A1 -> OpenAI : extract travel information\nand decompose subtasks
+OpenAI --> A1 : JSON output\n{ destination, days, interests,\n  budget, companion, subtasks }
+
+A1 -> A1 : parse JSON result\nvalidate required fields
+
+alt missing required fields
+A1 --> API : intake incomplete\n{ missing_fields,\n  follow_up_questions }
+API --> User : ask for missing details
+
+else intake complete
+A1 -> A1 : build collected_info\nand task decomposition
+
+
+A1 --> A2 : collected_info + subtasks\n{ destination, days, interests,\n  budget, companion, subtasks }
+
+
+end
+end
+
+deactivate A1
+
+@enduml

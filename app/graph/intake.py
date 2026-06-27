@@ -150,14 +150,99 @@ def intake_and_decompose(message: str) -> IntakeDecompResult | None:
 
 def question_for_field(field: str) -> str:
     prompts = {
-        "destination": "Bạn muốn đến khu vực nào ở Đà Nẵng?",
-        "days": "Chuyến đi của bạn kéo dài mấy ngày?",
+        "destination": (
+            "🏖️ Bạn muốn khám phá khu vực nào ở Đà Nẵng? "
+            "(ví dụ: Bãi Mỹ Khê, Bán đảo Sơn Trà, Phố cổ, khu trung tâm, hoặc bạn muốn khám phá toàn bộ Đà Nẵng?)"
+        ),
+        "days": (
+            "📅 Chuyến đi của bạn kéo dài bao lâu? "
+            "(vui lòng cho biết số ngày, ví dụ: 3 ngày 2 đêm, 4 ngày...)"
+        ),
         "interests": (
-            "Bạn thích những trải nghiệm gì? "
-            "(ví dụ: ẩm thực, di tích lịch sử, bảo tàng, biển, mua sắm, cà phê, tâm linh, thiên nhiên...)"
+            "❤️ Bạn thích những trải nghiệm gì? "
+            "(có thể chọn nhiều, ví dụ: ẩm thực, di tích lịch sử, bảo tàng, biển, mua sắm, cà phê, tâm linh, thiên nhiên, nightlife, hoạt động gia đình...)"
+        ),
+        "budget": (
+            "💰 Ngân sách dự tính của bạn là bao nhiêu? "
+            "(ví dụ: tiết kiệm/budget, trung bình, cao cấp/luxury)"
+        ),
+        "companion": (
+            "👥 Bạn đi du lịch với ai? "
+            "(ví dụ: một mình, bạn bè, gia đình, đôi...)"
         ),
     }
-    return prompts[field]
+    return prompts.get(field, f"Vui lòng cung cấp thông tin về: {field}")
+
+
+def generate_contextual_suggestions(collected: dict[str, str]) -> list[str]:
+    """Generate contextual suggestions based on what user has already provided."""
+    suggestions = []
+    
+    destination = str(collected.get("destination", "")).strip().lower()
+    days = str(collected.get("days", "")).strip()
+    interests = str(collected.get("interests", "")).strip().lower()
+    budget = str(collected.get("budget", "")).strip().lower()
+    companion = str(collected.get("companion", "")).strip().lower()
+    
+    # Suggestions based on destination
+    if destination and "sơn trà" in destination:
+        suggestions.append("💡 Tip: Bán đảo Sơn Trà nổi tiếng với rừng nguyên sinh - đừng quên ghé Thảo Cầm Viên!")
+    elif destination and "mỹ khê" in destination:
+        suggestions.append("💡 Tip: Bãi Mỹ Khê là bãi biển đẹp nhất - thời gian tốt nhất là sáng sớm!")
+    
+    # Suggestions based on days
+    if days:
+        try:
+            day_count = int(days)
+            if day_count <= 2:
+                suggestions.append("💡 Tip: Với " + days + " ngày, bạn nên tập trung vào các điểm chính. Gợi ý: Bãi Mỹ Khê + Phố cổ hoặc Thảo Cầm Viên.")
+            elif day_count <= 4:
+                suggestions.append("💡 Tip: Với " + days + " ngày, bạn có thể kết hợp biển, lịch sử và ẩm thực địa phương.")
+            else:
+                suggestions.append("💡 Tip: Với " + days + " ngày, bạn đủ thời gian khám phá đầy đủ Đà Nẵng bao gồm cả những địa điểm lân cận.")
+        except Exception:
+            pass
+    
+    # Suggestions based on interests
+    if interests:
+        if "biển" in interests or "beach" in interests.lower():
+            suggestions.append("🌊 Địa điểm biển nổi tiếng: Bãi Mỹ Khê, bãi Khe Ngang, bãi Nam Ô.")
+        if "ẩm thực" in interests or "food" in interests.lower():
+            suggestions.append("🍜 Không nên bỏ lỡ: Mì Quảng, Bánh canh cua, Cơm gà, các quán ăn ở chợ Hàn.")
+        if "lịch sử" in interests or "heritage" in interests.lower():
+            suggestions.append("🏛️ Điểm tham quan: Phố cổ, Chùa Thái Hà, Di tích Nạn Hành, Cầu Vàng.")
+        if "tâm linh" in interests or "spiritual" in interests.lower():
+            suggestions.append("🙏 Các chùa và đền nổi tiếng: Chùa Tam Bảo, Đền Mẫu Cô Gái, Chùa Linh Ứng.")
+        if "thiên nhiên" in interests or "nature" in interests.lower():
+            suggestions.append("🏔️ Tự nhiên: Bán đảo Sơn Trà, Thành phố Đèn khu du lịch Đà Nẵng, Suối Bàn Tay.")
+        if "mua sắm" in interests or "shopping" in interests.lower():
+            suggestions.append("🛍️ Mua sắm: Chợ Hàn, Việt Nam Grand Plaza, các cửa hàng lưu niệm trên phố Tràng Tiền.")
+        if "cà phê" in interests or "cafe" in interests.lower():
+            suggestions.append("☕ Quán cà phê đẹp: Cà phê teahouse dọc sông Hàn, các quán cà phê nghệ thuật ở phố cổ.")
+        if "nightlife" in interests:
+            suggestions.append("🌙 Hoạt động buổi tối: Sky bar, Bar trên mái, Chợ Đêm, khu ăn chơi trên bãi biển.")
+        if "gia đình" in interests or "family" in interests.lower():
+            suggestions.append("👨‍👩‍👧 Hoạt động gia đình: Thảo Cầm Viên, Công viên nước, Bãi biển an toàn, tiểu đoàn công viên.")
+    
+    # Suggestions based on budget
+    if budget:
+        if "tiết kiệm" in budget or "budget" in budget or "rẻ" in budget:
+            suggestions.append("💰 Gợi ý tiết kiệm: Ăn ở chợ địa phương, khám phá các điểm miễn phí như phố cổ, bãi biển công cộng.")
+        elif "cao cấp" in budget or "luxury" in budget.lower():
+            suggestions.append("✨ Resort sang trọng: InterContinental, Fusion Maia, Sonasea Phòng khách Đà Nẵng - các nhà hàng Michelin.")
+    
+    # Suggestions based on companion
+    if companion:
+        if "gia đình" in companion:
+            suggestions.append("👨‍👩‍👧‍👦 Gợi ý gia đình: Chọn chỗ ở gần biển, tránh những hoạt động mạo hiểm, ưu tiên các điểm an toàn cho trẻ em.")
+        elif "bạn bè" in companion:
+            suggestions.append("👯 Gợi ý bạn bè: Khám phá nightlife, các hoạt động thể thao nước, những quán bar trên biển.")
+        elif "đôi" in companion:
+            suggestions.append("💑 Gợi ý đôi: Những quán cà phê lãng mạn, dạo phố vào chiều tối, sunset cruise trên sông Hàn.")
+        elif "một mình" in companion:
+            suggestions.append("🎒 Gợi ý một mình: Các chuyến tham gia nhóm, hoạt động ngoài trời, những quán cà phê với cộng đồng backpacker.")
+    
+    return suggestions
 
 
 def _llm_extract(text: str) -> dict[str, str] | None:
